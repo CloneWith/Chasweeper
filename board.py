@@ -18,7 +18,6 @@ class Board:
         self.common_letters = "ETAOINSHRDLCUMWFGYPBVKJXQZ"
         self.fill_board()
         self.exit_prompt = False
-        self.menu_button_clicked = False
         self.game_won = False
         self.move_count = 0  # Initialize move counter
         self.last_revealed = None  # Track the last revealed cell
@@ -347,12 +346,6 @@ class Board:
             self.stdscr.addstr(y, x, '+---')
         self.stdscr.addstr(y, x + 4, '+')
 
-        # Draw the menu button and exit prompt on the same line
-        if self.menu_button_clicked:
-            self.stdscr.addstr(h - 2, w - 20, "[Click again to quit]", curses.A_REVERSE)
-        else:
-            self.stdscr.addstr(h - 2, w - 12, "[ Menu ]", curses.A_REVERSE)
-
         if self.exit_prompt:
             self.stdscr.addstr(h - 2, w - 50, "* Wanna quit? Press esc again to quit.")
         else:
@@ -493,6 +486,12 @@ class Board:
                     else:
                         self.exit_prompt = True
                         self.draw_board()
+                elif key == ord('n') and self.game_won:
+                    self.__init__(self.stdscr, self.size)
+                    self.run()
+                elif key == ord('q') and self.game_won:
+                    curses.endwin()
+                    break
                 elif key == curses.KEY_MOUSE and not self.game_won:
                     _, mx, my, _, button_state = curses.getmouse()
                     h, w = self.stdscr.getmaxyx()
@@ -548,28 +547,10 @@ class Board:
                             if self.check_all_words_revealed():
                                 self.game_won = True
                                 self.draw_board()
-                elif key == ord('n') and self.game_won:
-                    self.__init__(self.stdscr, self.size)
-                    self.run()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
                     break
-                elif key == curses.KEY_MOUSE:
-                    _, mx, my, _, button_state = curses.getmouse()
-                    h, w = self.stdscr.getmaxyx()
-                    if my == h - 2 and w - 12 <= mx < w - 5:
-                        if self.menu_button_clicked:
-                            curses.endwin()
-                            return
-                        else:
-                            self.menu_button_clicked = True
-                            self.draw_board()
-                    else:
-                        self.menu_button_clicked = False
-                        self.exit_prompt = False
-                        self.draw_board()
                 else:
-                    self.menu_button_clicked = False
                     self.exit_prompt = False
                     self.draw_board()
 
