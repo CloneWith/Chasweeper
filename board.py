@@ -125,64 +125,107 @@ class Board:
 
     def calculate_mine_hint(self, row, col):
         hint = [' ', ' ']
-        mines = {
-            'top_left': False, 'top': False, 'top_right': False,
-            'left': False, 'right': False,
-            'bottom_left': False, 'bottom': False, 'bottom_right': False
-        }
 
-        for i in range(max(0, row - 1), min(self.size, row + 2)):
-            for j in range(max(0, col - 1), min(self.size, col + 2)):
-                if self.board[i][j] == '✱':
-                    if i < row and j < col:
-                        mines['top_left'] = True
-                    elif i < row and j == col:
-                        mines['top'] = True
-                    elif i < row and j > col:
-                        mines['top_right'] = True
-                    elif i == row and j < col:
-                        mines['left'] = True
-                    elif i == row and j > col:
-                        mines['right'] = True
-                    elif i > row and j < col:
-                        mines['bottom_left'] = True
-                    elif i > row and j == col:
-                        mines['bottom'] = True
-                    elif i > row and j > col:
-                        mines['bottom_right'] = True
+        def has_mine_in_direction(dir_row, dir_col):
+            for i in range(1, 4):  # Check up to 3 cells in the direction
+                new_row = row + dir_row * i
+                new_col = col + dir_col * i
+                if 0 <= new_row < self.size and 0 <= new_col < self.size:
+                    if self.board[new_row][new_col] == '✱':
+                        return True
+                else:
+                    break  # Stop if out of bounds
+            return False
 
-        # Determine the hint based on the mines' positions
-        if mines['top'] and not (mines['top_left'] or mines['top_right']):
-            hint[0] = '⠁'
-        if mines['bottom'] and not (mines['bottom_left'] or mines['bottom_right']):
-            hint[1] = '⢀'
-        if mines['left'] and not (mines['top_left'] or mines['bottom_left']):
+        # Check for mines in all 8 directions
+        top = has_mine_in_direction(-1, 0)
+        bottom = has_mine_in_direction(1, 0)
+        left = has_mine_in_direction(0, -1)
+        right = has_mine_in_direction(0, 1)
+        top_left = has_mine_in_direction(-1, -1)
+        bottom_left = has_mine_in_direction(1, -1)
+        top_right = has_mine_in_direction(-1, 1)
+        bottom_right = has_mine_in_direction(1, 1)
+
+        
+        if left and top_left:
+            hint[0] = '⠁'  # Combine left and top-left as one dot (⠁)
+        elif left and bottom_left:
+            hint[0] = '⡀'  # Combine left and bottom-left as one dot (⡀)
+        elif top_left and bottom_left:
+            hint[0] = '⡁'  # Combine top-left and bottom-left as ⡁
+        else:
+            if left:
+                hint[0] = '⡀'
+            if top_left:
+                hint[0] = '⠁'
+            if bottom_left:
+                hint[0] = '⡀'
+
+        
+        if right and top_right:
+            hint[1] = '⠈'  # Combine right and top-right as one dot (⠈)
+        elif right and bottom_right:
+            hint[1] = '⢀'  # Combine right and bottom-right as one dot (⢀)
+        elif top_right and bottom_right:
+            hint[1] = '⢈'  # Combine top-right and bottom-right as ⢈
+        else:
+            if right:
+                hint[1] = '⠈'
+            if top_right:
+                hint[1] = '⠈'
+            if bottom_right:
+                hint[1] = '⢀'
+
+        ### Special cases: two mines in same row or column
+        # Top and top-left/top-right
+        if top and top_left:
+            hint[0] = '⠁'  # Top and top-left only needs one dot (⠁)
+        elif top and top_right:
+            hint[1] = '⠈'  # Top and top-right only needs one dot (⠈)
+
+        # Bottom and bottom-left/bottom-right
+        if bottom and bottom_left:
+            hint[0] = '⡀'  # Bottom and bottom-left only needs one dot (⡀)
+        elif bottom and bottom_right:
+            hint[1] = '⢀'  # Bottom and bottom-right only needs one dot (⢀)
+
+        ### Special cases: opposite directions
+        # Left and right
+        if left and right:
             hint[0] = '⡀'
-        if mines['right'] and not (mines['top_right'] or mines['bottom_right']):
-            hint[1] = '⠈'
+            hint[1] = '⠈'  # Left and right can be represented as ⡀⠈
 
-        # Special cases for combined hints
-        if mines['top_left'] and mines['bottom_left']:
-            hint[0] = '⡁'
-        elif mines['top_left']:
+        # Top and bottom
+        if top and bottom:
             hint[0] = '⠁'
-        elif mines['bottom_left']:
-            hint[0] = '⡀'
+            hint[1] = '⢀'  # Top and bottom can be represented as ⠁⢀
 
-        if mines['top_right'] and mines['bottom_right']:
-            hint[1] = '⢈'
-        elif mines['top_right']:
-            hint[1] = '⠈'
-        elif mines['bottom_right']:
-            hint[1] = '⢀'
+        ### Special cases: adjacent but different groups
+        # Top and left
+        if top and left:
+            hint[0] = '⠁'  # Top and left, use ⠁ for top
 
-        # Handle cases where there are mines in both directions
-        if mines['top'] and mines['bottom']:
+        # Top and right
+        if top and right:
+            hint[1] = '⠈'  # Top and right, use ⠈ for right
+
+        # Right and bottom
+        if right and bottom:
+            hint[1] = '⢀'  # Right and bottom, use ⢀
+
+        # Bottom and left
+        if bottom and left:
+            hint[0] = '⡀'  # Bottom and left, use ⡀
+
+        # Special case: two mines in the same row on corners
+        if top_left and top_right:
             hint[0] = '⠁'
-            hint[1] = '⢀'
-        if mines['left'] and mines['right']:
+            hint[1] = '⠈'  # Top-left and top-right can be represented as ⠁⠈
+
+        if bottom_left and bottom_right:
             hint[0] = '⡀'
-            hint[1] = '⠈'
+            hint[1] = '⢀'  # Bottom-left and bottom-right can be represented as ⡀⢀
 
         return hint
 
