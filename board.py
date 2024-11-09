@@ -127,14 +127,11 @@ class Board:
         hint = [' ', ' ']
 
         def has_mine_in_direction(dir_row, dir_col):
-            for i in range(1, 4):  # Check up to 3 cells in the direction
-                new_row = row + dir_row * i
-                new_col = col + dir_col * i
-                if 0 <= new_row < self.size and 0 <= new_col < self.size:
-                    if self.board[new_row][new_col] == '✱':
-                        return True
-                else:
-                    break  # Stop if out of bounds
+            new_row = row + dir_row
+            new_col = col + dir_col
+            if 0 <= new_row < self.size and 0 <= new_col < self.size:
+                if self.board[new_row][new_col] == '✱':
+                    return True
             return False
 
         # Check for mines in all 8 directions
@@ -147,35 +144,55 @@ class Board:
         top_right = has_mine_in_direction(-1, 1)
         bottom_right = has_mine_in_direction(1, 1)
 
-        
-        if left and top_left:
-            hint[0] = '⠁'  # Combine left and top-left as one dot (⠁)
-        elif left and bottom_left:
-            hint[0] = '⡀'  # Combine left and bottom-left as one dot (⡀)
-        elif top_left and bottom_left:
-            hint[0] = '⡁'  # Combine top-left and bottom-left as ⡁
-        else:
-            if left:
-                hint[0] = '⡀'
-            if top_left:
-                hint[0] = '⠁'
-            if bottom_left:
-                hint[0] = '⡀'
+        # Special case: three mines in a same row
+        if top and top_left and top_right:
+            hint[0] = '⠁'
+            hint[1] = '⠈'  # Top, top-left, and top-right can be represented as ⠁⠈
 
+        if bottom and bottom_left and bottom_right:
+            hint[0] = '⡀'
+            hint[1] = '⢀'  # Bottom, bottom-left, and bottom-right can be represented as ⡀⢀
+
+        # Special case: three mines in a same column
+        if left and top_left and bottom_left:
+            hint[0] = '⡁'
+        if right and top_right and bottom_right:
+            hint[1] = '⢈'
         
-        if right and top_right:
-            hint[1] = '⠈'  # Combine right and top-right as one dot (⠈)
-        elif right and bottom_right:
-            hint[1] = '⢀'  # Combine right and bottom-right as one dot (⢀)
-        elif top_right and bottom_right:
-            hint[1] = '⢈'  # Combine top-right and bottom-right as ⢈
-        else:
-            if right:
-                hint[1] = '⠈'
-            if top_right:
-                hint[1] = '⠈'
-            if bottom_right:
-                hint[1] = '⢀'
+        # Special case: three mines on the same direction
+        if top and top_left and left:
+            hint[0] = '⠁'
+        if top and top_right and right:
+            hint[1] = '⠈'
+        if bottom and bottom_left and left:
+            hint[0] = '⡀'
+        if bottom and bottom_right and right:
+            hint[1] = '⢀'
+
+        # Special case: three mines forming < or > shape
+        if top and left and bottom:
+            hint[0] = '⡁'
+            # Top and left
+            if top and left:
+                hint[0] = '⠁'  # Top and left, use ⠁ for top
+            # Bottom and left
+            if bottom and left:
+                hint[0] = '⡀'  # Bottom and left, use ⡀
+
+        if top and right and bottom:
+            hint[1] = '⢈'
+            # Top and right
+            if top and right:
+                hint[1] = '⠈'  # Top and right, use ⠈ for right
+            # Right and bottom
+            if right and bottom:
+                hint[1] = '⢀'  # Right and bottom, use ⢀
+
+        # Bottom and bottom-left/bottom-right
+        if bottom and bottom_left:
+            hint[0] = '⡀'  # Bottom and bottom-left only needs one dot (⡀)
+        elif bottom and bottom_right:
+            hint[1] = '⢀'  # Bottom and bottom-right only needs one dot (⢀)
 
         ### Special cases: two mines in same row or column
         # Top and top-left/top-right
@@ -183,12 +200,6 @@ class Board:
             hint[0] = '⠁'  # Top and top-left only needs one dot (⠁)
         elif top and top_right:
             hint[1] = '⠈'  # Top and top-right only needs one dot (⠈)
-
-        # Bottom and bottom-left/bottom-right
-        if bottom and bottom_left:
-            hint[0] = '⡀'  # Bottom and bottom-left only needs one dot (⡀)
-        elif bottom and bottom_right:
-            hint[1] = '⢀'  # Bottom and bottom-right only needs one dot (⢀)
 
         ### Special cases: opposite directions
         # Left and right
@@ -198,25 +209,10 @@ class Board:
 
         # Top and bottom
         if top and bottom:
-            hint[0] = '⠁'
-            hint[1] = '⢀'  # Top and bottom can be represented as ⠁⢀
-
-        ### Special cases: adjacent but different groups
-        # Top and left
-        if top and left:
-            hint[0] = '⠁'  # Top and left, use ⠁ for top
-
-        # Top and right
-        if top and right:
-            hint[1] = '⠈'  # Top and right, use ⠈ for right
-
-        # Right and bottom
-        if right and bottom:
-            hint[1] = '⢀'  # Right and bottom, use ⢀
-
-        # Bottom and left
-        if bottom and left:
-            hint[0] = '⡀'  # Bottom and left, use ⡀
+            if hint[0] == ' ':
+                hint[0] = '⠁'
+            if hint[1] == ' ':
+                hint[1] = '⢀'  # Top and bottom can be represented as ⠁⢀
 
         # Special case: two mines in the same row on corners
         if top_left and top_right:
@@ -226,6 +222,59 @@ class Board:
         if bottom_left and bottom_right:
             hint[0] = '⡀'
             hint[1] = '⢀'  # Bottom-left and bottom-right can be represented as ⡀⢀
+
+        if left and top_left and hint[0] == ' ':
+            hint[0] = '⠁'  # Combine left and top-left as one dot (⠁)
+        elif left and bottom_left and hint[0] == ' ':
+            hint[0] = '⡀'  # Combine left and bottom-left as one dot (⡀)
+        elif top_left and bottom_left and hint[0] == ' ':
+            hint[0] = '⡁'  # Combine top-left and bottom-left as ⡁
+        else:
+            if left:
+                hint[0] = '⡀'
+            if top_left:
+                hint[0] = '⠁'
+            if bottom_left:
+                hint[0] = '⡀'
+
+        if right and top_right and hint[1] == ' ':
+            hint[1] = '⠈'  # Combine right and top-right as one dot (⠈)
+        elif right and bottom_right and hint[1] == ' ':
+            hint[1] = '⢀'  # Combine right and bottom-right as one dot (⢀)
+        elif top_right and bottom_right and hint[1] == ' ':
+            hint[1] = '⢈'  # Combine top-right and bottom-right as ⢈
+        else:
+            if right:
+                hint[1] = '⠈'
+            if top_right:
+                hint[1] = '⠈'
+            if bottom_right:
+                hint[1] = '⢀'
+
+        # Updated `if top:` condition
+        if top:
+            if not (hint[0] in ['⠁', '⡁'] or hint[1] in ['⢈', '⠈']):
+                if hint[0] == ' ':
+                    hint[0] = '⠁'
+                elif hint[1] == ' ':
+                    hint[1] = '⠈'
+                elif hint[0] == '⡀':
+                    hint[0] = '⡁'
+                elif hint[1] == '⢀':
+                    hint[1] = '⢈'
+
+        if bottom:
+            if not (hint[0] in ['⡀', '⡁'] or hint[1] in ['⢈', '⢀']):
+                if hint[0] == ' ':
+                    hint[0] = '⡀'
+                elif hint[1] == ' ':
+                    hint[1] = '⢀'
+                elif hint[0] == '⠁':
+                    hint[0] = '⡁'
+                elif hint[1] == '⠈':
+                    hint[1] = '⢈'
+            
+            
 
         return hint
 
