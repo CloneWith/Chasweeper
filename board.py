@@ -397,7 +397,7 @@ class Board:
                 if key == 27:  # ESC key
                     if self.exit_prompt:
                         curses.endwin()
-                        break
+                        return
                     else:
                         self.exit_prompt = True
                         self.draw_board()
@@ -468,7 +468,7 @@ class Board:
                     if my == h - 2 and w - 12 <= mx < w - 5:
                         if self.menu_button_clicked:
                             curses.endwin()
-                            break
+                            return
                         else:
                             self.menu_button_clicked = True
                             self.draw_board()
