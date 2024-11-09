@@ -149,7 +149,16 @@ class Menu:
                     if y == my:
                         self.current_row = idx
                         if button_state & curses.BUTTON1_CLICKED:
-                            self.handle_enter()
+                            if row == "Exit Game":
+                                exit()
+                            elif row == "Back":
+                                if self.current_menu == "start_game":
+                                    self.current_menu = "main"
+                                elif self.current_menu == "classic_mode":
+                                    self.current_menu = "start_game"
+                                self.current_row = 0
+                            else:
+                                self.handle_enter()
                         self.print_menu(menu)
                         break
             elif key == 27:  # ESC key
