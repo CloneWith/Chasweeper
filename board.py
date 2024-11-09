@@ -54,8 +54,11 @@ class Board:
         # Filter out words longer than the board size
         valid_words = [word for word in self.words if len(word) <= self.size]
 
-        # Randomly select 3 words to place on the board
-        self.selected_words = random.sample(valid_words, 3)
+        # Assign weights to words based on their length
+        word_weights = [1 / len(word) for word in valid_words]
+
+        # Randomly select 3 words to place on the board with adjusted probabilities
+        self.selected_words = random.choices(valid_words, weights=word_weights, k=3)
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
@@ -91,7 +94,6 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 if self.board[i][j] == ' ' and random.random() < 0.15:  # Chance to fill the cell
-                                                                        # Reduce this value to increase the number of empty cells
                     # Avoid using letters that are already placed in words
                     available_letters = [letter for letter in self.common_letters if letter not in placed_letters]
                     self.board[i][j] = random.choice(available_letters)  # Randomly choose a common letter
