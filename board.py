@@ -2,8 +2,9 @@ import curses
 import random
 
 class Board:
-    def __init__(self, stdscr, size=7):
+    def __init__(self, stdscr, user, size=7):
         self.stdscr = stdscr
+        self.user = user
         self.size = size
         self.board = [[' ' for _ in range(size)] for _ in range(size)]
         self.covered = [[True for _ in range(size)] for _ in range(size)]
@@ -489,7 +490,7 @@ class Board:
                         self.exit_prompt = True
                         self.draw_board()
                 elif key == ord('n') and self.game_won:
-                    self.__init__(self.stdscr, self.size)
+                    self.__init__(self.stdscr, self.user, self.size)
                     self.run()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()

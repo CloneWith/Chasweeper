@@ -157,8 +157,10 @@ class Menu:
 
     def start_game_with_difficulty(self, difficulty):
         # Trigger board.py to start the game with the selected difficulty
-        board = Board(self.stdscr, self.current_user, difficulty)
-        board.start()
+        if difficulty == "Easy":
+            board = Board(self.stdscr, self.current_user)
+            
+        board.run()
 
     def register(self):
         self.stdscr.addstr(13, 10, "Enter user ID: ")
