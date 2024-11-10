@@ -60,7 +60,7 @@ class UserStatistics:
 
             if not self.users:
                 self.stdscr.addstr(h // 2, (w - len("No users registered.")) // 2, "No users registered.", curses.A_BOLD)
-                self.stdscr.addstr(h // 2 + 1, (w - len("Press ESC to return to the main menu.")) // 2, "Press ESC to return to the main menu.", curses.A_DIM)
+                self.stdscr.addstr(h // 2 + 5, (w - len("Press ESC to return to the main menu.")) // 2, "Press ESC to return to the main menu.", curses.A_DIM)
                 self.stdscr.refresh()
                 while True:
                     if not self.check_window_size():
@@ -69,10 +69,10 @@ class UserStatistics:
                     if key == 27:  # ESC key
                         return False
             else:
-                self.stdscr.addstr(0, 0, "Select a user to view statistics:", curses.A_BOLD | curses.A_UNDERLINE)
+                self.stdscr.addstr(h // 2 - len(self.users) // 2 - 1, (w - len("Select a user to view statistics:")) // 2, "Select a user to view statistics:", curses.A_BOLD | curses.A_UNDERLINE)
                 for idx, user in enumerate(self.users):
-                    self.stdscr.addstr(idx + 2, 0, f"{idx + 1}. {user.user_id}")
-                self.stdscr.addstr(len(self.users) + 3, 0, "Press ESC to return to the main menu.", curses.A_DIM)
+                    self.stdscr.addstr(h // 2 - len(self.users) // 2 + idx, (w - len(f"{idx + 1}. {user.user_id}")) // 2, f"{idx + 1}. {user.user_id}")
+                self.stdscr.addstr(h // 2 + len(self.users) // 2 + 1, (w - len("Press ESC to return to the main menu.")) // 2, "Press ESC to return to the main menu.", curses.A_DIM)
                 self.stdscr.refresh()
 
                 while True:
