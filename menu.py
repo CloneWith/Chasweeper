@@ -169,9 +169,21 @@ class Menu:
     def register(self):
         while True:
             self.stdscr.clear()
-            self.stdscr.addstr(13, 10, "Enter user ID: ")
+            self.stdscr.addstr(13, 10, "Enter user ID (Press ESC to cancel): ")
             curses.echo()
-            user_id = self.stdscr.getstr().decode('utf-8')
+            user_id = ""
+            while True:
+                key = self.stdscr.getch()
+                if key == 27:  # ESC key
+                    self.current_menu = "main"
+                    self.current_row = 0
+                    return
+                elif key in [10, 13]:  # Enter key
+                    break
+                else:
+                    user_id += chr(key)
+                    self.stdscr.addstr(13, 10 + len("Enter user ID (Press ESC to cancel): "), user_id)
+                    self.stdscr.refresh()
             curses.noecho()
 
             # Validate username
@@ -200,7 +212,7 @@ class Menu:
                 user = User(user_id)
                 user.save_to_file()
                 self.users.append(user)
-                self.stdscr.addstr(14, 10, "Registration successful. Press any key to re-enter username.")
+                self.stdscr.addstr(14, 10, "Registration successful. Press any key to continue.")
                 self.stdscr.getch()
                 break
         self.current_menu = "main"
