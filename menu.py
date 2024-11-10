@@ -14,6 +14,8 @@ class Menu:
         self.menus = {
             "main": ["Start Game", "View Statistics", "Exit Game"],
             "start_game": [],
+            "user_menu": ["Start Game", "View Statistics", "Logout", "Exit Game"],
+            "mode_selection": ["Classic Mode", "Timed Mode", "Back"],
             "classic_mode": ["Easy", "Hard", "Expert", "Back"]
         }
         self.descriptions = {
@@ -27,7 +29,8 @@ class Menu:
             "Hard": "* Hard difficulty",
             "Expert": "* Expert difficulty",
             "New player? Click here to register!": "* Register a new player",
-            "Click here or press 'Enter' to register!": "* Register a new player"
+            "Click here or press 'Enter' to register!": "* Register a new player",
+            "Logout": "* Log out of your account"
         }
         self.ascii_art = [
             "  __          __           _                                   ",
@@ -83,6 +86,9 @@ class Menu:
                 self.stdscr.attron(curses.color_pair(1))
                 self.stdscr.addstr(y, x, row)
                 self.stdscr.attroff(curses.color_pair(1))
+                # Display description on the right side of the screen
+                if row in self.descriptions:
+                    self.stdscr.addstr(y, w - len(self.descriptions[row]) - 2, self.descriptions[row])
             else:
                 self.stdscr.addstr(y, x, row)
         self.stdscr.refresh()
@@ -106,14 +112,53 @@ class Menu:
                 self.current_row = 0
         elif self.current_menu == "register":
             self.register()
+        elif self.current_menu == "user_menu":
+            if menu[self.current_row] == "Start Game":
+                self.current_menu = "mode_selection"
+                self.current_row = 0
+            elif menu[self.current_row] == "View Statistics":
+                self.view_statistics()
+            elif menu[self.current_row] == "Logout":
+                self.current_user = None
+                self.current_menu = "main"
+                self.current_row = 0
+            elif menu[self.current_row] == "Exit Game":
+                exit()
+        elif self.current_menu == "mode_selection":
+            if menu[self.current_row] == "Classic Mode":
+                self.current_menu = "classic_mode"
+                self.current_row = 0
+            elif menu[self.current_row] == "Timed Mode":
+                self.start_timed_mode()
+            elif menu[self.current_row] == "Back":
+                self.current_menu = "user_menu"
+                self.current_row = 0
+        elif self.current_menu == "classic_mode":
+            if menu[self.current_row] == "Easy":
+                self.start_game_with_difficulty("Easy")
+            elif menu[self.current_row] == "Hard":
+                self.start_game_with_difficulty("Hard")
+            elif menu[self.current_row] == "Expert":
+                self.start_game_with_difficulty("Expert")
+            elif menu[self.current_row] == "Back":
+                self.current_menu = "mode_selection"
+                self.current_row = 0
 
     def start_game(self):
-        if not self.users:
-            self.menus["start_game"] = ["Click here or press 'Enter' to register!"]
+        if self.current_user is None:
+            if not self.users:
+                self.menus["start_game"] = ["Click here or press 'Enter' to register!"]
+            else:
+                self.menus["start_game"] = [user.user_id for user in self.users] + ["New player? Click here to register!"]
+            self.current_menu = "start_game"
         else:
-            self.menus["start_game"] = [user.user_id for user in self.users] + ["New player? Click here to register!"]
-        self.current_menu = "start_game"
+            self.current_menu = "mode_selection"
         self.current_row = 0
+
+    def start_game_with_difficulty(self, difficulty):
+        # Trigger board.py to start the game with the selected difficulty
+        board = Board(self.stdscr, self.current_user, difficulty)
+        board.start()
 
     def register(self):
         self.stdscr.addstr(13, 10, "Enter user ID: ")
@@ -133,7 +178,7 @@ class Menu:
         self.current_row = 0
 
     def view_statistics(self):
-        stats = UserStatistics(self.stdscr)
+        stats = UserStatistics(self.stdscr, self.current_user)
         stats.display()
         self.current_menu = "main"
         self.current_row = 0
@@ -159,6 +204,15 @@ class Menu:
                     exit()
                 elif self.current_menu == "start_game" or self.current_menu == "register":
                     self.current_menu = "main"
+                    self.current_row = 0
+                elif self.current_menu == "user_menu":
+                    self.current_menu = "main"
+                    self.current_row = 0
+                elif self.current_menu == "mode_selection":
+                    self.current_menu = "user_menu"
+                    self.current_row = 0
+                elif self.current_menu == "classic_mode":
+                    self.current_menu = "mode_selection"
                     self.current_row = 0
             elif key == curses.KEY_MOUSE:
                 _, mx, my, _, _ = curses.getmouse()
