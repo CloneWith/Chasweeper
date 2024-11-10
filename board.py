@@ -292,9 +292,9 @@ class Board:
     def display_user_info(self):
         h, w = self.stdscr.getmaxyx()
         user_info_win = curses.newwin(5, 30, 1, w - 31)
-        user_info_win.box()
-        user_info_win.addstr(1, 1, f"Username: ", curses.A_BOLD)
-        user_info_win.addstr(1, 11, f"{self.user.user_id}")
+        user_info_win.border('|', '|', '-', '-', '+', '+', '+', '+')
+        user_info_win.addstr(1, 2, f"Player: ")
+        user_info_win.addstr(1, 12, f"{self.user.user_id}", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
@@ -485,11 +485,11 @@ class Board:
 
             curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
             self.draw_board()
-            self.display_user_info()
             while True:
                 if not self.check_window_size():
                     break
-
+                
+                self.display_user_info()
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
                     if self.exit_prompt:
