@@ -14,8 +14,9 @@ class UserStatistics:
             with open('./data/user.txt', 'r') as file:
                 for line in file:
                     data = line.strip().split(',')
-                    user = User(data[0], int(data[1]), int(data[2]), int(data[3]), data[4], int(data[5]), int(data[6]), int(data[7]), float(data[8]), int(data[9]), int(data[10]))
-                    users.append(user)
+                    if len(data) == 11:  # Ensure the correct number of fields
+                        user = User(data[0], int(data[1]), int(data[2]), int(data[3]), data[4], int(data[5]), int(data[6]), int(data[7]), float(data[8]), int(data[9]), int(data[10]))
+                        users.append(user)
         return users
 
     def check_window_size(self):

@@ -160,7 +160,8 @@ class Menu:
         self.current_row = 0
 
     def start_game_with_difficulty(self, difficulty):
-        # Trigger board.py to start the game with the selected difficulty
+        # Currently only Classic mode - Easy is implemented
+        # difficulty parameter is currently not used
         board = Board(self.stdscr, self.current_user)
         board.run()
 
@@ -182,7 +183,7 @@ class Menu:
         self.current_row = 0
 
     def view_statistics(self):
-        stats = UserStatistics(self.stdscr, self.current_user)
+        stats = UserStatistics(self.stdscr)
         stats.display()
         self.current_menu = "main"
         self.current_row = 0
