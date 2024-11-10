@@ -116,18 +116,18 @@ class Menu:
         self.current_row = 0
 
     def register(self):
-        self.stdscr.addstr(0, 0, "Enter user ID: ")
+        self.stdscr.addstr(13, 10, "Enter user ID: ")
         curses.echo()
         user_id = self.stdscr.getstr().decode('utf-8')
         curses.noecho()
         if User.load_from_file(user_id):
-            self.stdscr.addstr(1, 0, "User ID already exists. Press any key to continue.")
+            self.stdscr.addstr(14, 10, "User ID already exists. Press any key to continue.")
             self.stdscr.getch()
         else:
             user = User(user_id)
             user.save_to_file()
             self.users.append(user)
-            self.stdscr.addstr(1, 0, "Registration successful. Press any key to continue.")
+            self.stdscr.addstr(14, 10, "Registration successful. Press any key to continue.")
             self.stdscr.getch()
         self.current_menu = "main"
         self.current_row = 0
