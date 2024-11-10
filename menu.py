@@ -91,6 +91,10 @@ class Menu:
                     self.stdscr.addstr(y, w - len(self.descriptions[row]) - 2, self.descriptions[row])
             else:
                 self.stdscr.addstr(y, x, row)
+        # Display logged in user on the top right corner
+        if self.current_user:
+            login_message = f"Logged in as {self.current_user.user_id}"
+            self.stdscr.addstr(0, w - len(login_message) - 2, login_message)
         self.stdscr.refresh()
 
     def handle_enter(self):
@@ -157,9 +161,7 @@ class Menu:
 
     def start_game_with_difficulty(self, difficulty):
         # Trigger board.py to start the game with the selected difficulty
-        if difficulty == "Easy":
-            board = Board(self.stdscr, self.current_user)
-            
+        board = Board(self.stdscr, self.current_user)
         board.run()
 
     def register(self):
