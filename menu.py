@@ -46,8 +46,9 @@ class Menu:
             with open('./data/user.txt', 'r') as file:
                 for line in file:
                     data = line.strip().split(',')
-                    user = User(data[0], int(data[1]), int(data[2]), int(data[3]), data[4], int(data[5]), int(data[6]), int(data[7]), float(data[8]), int(data[9]), int(data[10]))
-                    users.append(user)
+                    if len(data) == 11:  # Ensure the correct number of fields
+                        user = User(data[0], int(data[1]), int(data[2]), int(data[3]), data[4], int(data[5]), int(data[6]), int(data[7]), float(data[8]), int(data[9]), int(data[10]))
+                        users.append(user)
         return users
 
     def check_window_size(self):
@@ -97,6 +98,7 @@ class Menu:
                 exit()
         elif self.current_menu == "start_game":
             if menu[self.current_row] == "New player? Click here to register!" or menu[self.current_row] == "Click here or press 'Enter' to register!":
+                self.current_menu = "register"
                 self.register()
             elif self.current_row < len(self.users):
                 self.current_user = self.users[self.current_row]
@@ -114,7 +116,6 @@ class Menu:
         self.current_row = 0
 
     def register(self):
-        self.stdscr.clear()
         self.stdscr.addstr(0, 0, "Enter user ID: ")
         curses.echo()
         user_id = self.stdscr.getstr().decode('utf-8')
