@@ -1,5 +1,6 @@
 import curses
 import random
+import os
 
 class Board:
     def __init__(self, stdscr, user, size=7):
@@ -26,6 +27,7 @@ class Board:
         self.score = 0  # Initialize score
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
+        self.user_stats = self.load_user_stats()
 
     def load_words(self):
         words = []
@@ -36,6 +38,28 @@ class Board:
                 words.append(word)
                 word_complexity[word] = int(complexity)
         return words, word_complexity
+
+    def load_user_stats(self):
+        user_stats = {}
+        if os.path.exists('./data/user.txt'):
+            with open('./data/user.txt', 'r') as file:
+                for line in file:
+                    data = line.strip().split(',')
+                    if len(data) == 11 and data[0] == self.user.user_id:  # Ensure the correct number of fields and match user ID
+                        user_stats = {
+                            'games_played': int(data[1]),
+                            'games_won': int(data[2]),
+                            'words_revealed': int(data[3]),
+                            'longest_word_revealed': data[4],
+                            'mines_stepped': int(data[5]),
+                            'highest_score_classic': int(data[6]),
+                            'highest_score_timed': int(data[7]),
+                            'average_steps_used': float(data[8]),
+                            'min_steps_used': int(data[9]),
+                            'max_steps_used': int(data[10])
+                        }
+                        break
+        return user_stats
 
     def fill_board(self):
         # Reset the board and related variables
@@ -291,10 +315,12 @@ class Board:
 
     def display_user_info(self):
         h, w = self.stdscr.getmaxyx()
-        user_info_win = curses.newwin(5, 30, 1, w - 31)
+        user_info_win = curses.newwin(7, 40, 1, w - 41)
         user_info_win.border('|', '|', '-', '-', '+', '+', '+', '+')
         user_info_win.addstr(1, 2, f"Player: ")
         user_info_win.addstr(1, 12, f"{self.user.user_id}", curses.A_BOLD)
+        user_info_win.addstr(2, 2, f"Highest Score: ")
+        user_info_win.addstr(2, 17, f"{self.user_stats.get('highest_score_classic', 'N/A')}", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
