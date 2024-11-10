@@ -96,9 +96,9 @@ class Menu:
             elif menu[self.current_row] == "Exit Game":
                 exit()
         elif self.current_menu == "start_game":
-            if menu[self.current_row] == "New player? Click here to register!":
+            if menu[self.current_row] == "New player? Click here to register!" or menu[self.current_row] == "Click here or press 'Enter' to register!":
                 self.register()
-            else:
+            elif self.current_row < len(self.users):
                 self.current_user = self.users[self.current_row]
                 self.current_menu = "user_menu"
                 self.current_row = 0
