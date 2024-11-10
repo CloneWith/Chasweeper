@@ -18,8 +18,27 @@ class UserStatistics:
                     users.append(user)
         return users
 
+    def check_window_size(self):
+        h, w = self.stdscr.getmaxyx()
+        min_height = 25
+        min_width = 142
+
+        if h < min_height or w < min_width:
+            size_prompt = curses.newwin(h, w, 0, 0)
+            size_prompt.clear()
+            message = "Terminal window is too small! Please increase the window size."
+            y = h // 2
+            x = (w - len(message)) // 2
+            size_prompt.addstr(y, x, message, curses.A_BOLD)
+            size_prompt.refresh()
+            size_prompt.getch()  # Wait for user input
+            return False
+        return True
+
     def display(self):
         while True:
+            if not self.check_window_size():
+                continue
             if self.current_user is None:
                 if not self.select_user():
                     break  # Exit the loop if ESC is pressed in select_user
