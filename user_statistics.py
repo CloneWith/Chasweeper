@@ -43,8 +43,7 @@ class UserStatistics:
             if self.current_user is None:
                 if not self.select_user():
                     break  # Exit the loop if ESC is pressed in select_user
-            else:
-                self.display_user_stats()
+            self.display_user_stats()
 
     def select_user(self):
         current_row = 0
@@ -110,25 +109,24 @@ class UserStatistics:
             h, w = self.stdscr.getmaxyx()
             stats = self.current_user.stats
 
-            # Create a window for the statistics
-            stats_win = curses.newwin(h, w, 0, 0)
-            stats_win.clear()
+            # Calculate the starting y position to center the text vertically
+            start_y = h // 2 - 6  # 6 is half the number of lines of stats
 
             # Display the statistics
-            stats_win.addstr(0, 0, f"Statistics for {self.current_user.user_id}", curses.A_BOLD | curses.A_UNDERLINE)
-            stats_win.addstr(2, 0, f"Games Played: {stats['games_played']}")
-            stats_win.addstr(3, 0, f"Games Won: {stats['games_won']}")
-            stats_win.addstr(4, 0, f"Words Revealed: {stats['words_revealed']}")
-            stats_win.addstr(5, 0, f"Longest Word Revealed: {stats['longest_word_revealed']}")
-            stats_win.addstr(6, 0, f"Mines Stepped: {stats['mines_stepped']}")
-            stats_win.addstr(7, 0, f"Highest Score (Classic Mode): {stats['highest_score_classic']}")
-            stats_win.addstr(8, 0, f"Highest Score (Timed Mode): {stats['highest_score_timed']}")
-            stats_win.addstr(9, 0, f"Minimum Steps Used: {stats['min_steps_used']}")
-            stats_win.addstr(10, 0, f"Average Steps Used: {self.current_user.average_steps_used()}")
-            stats_win.addstr(12, 0, "Press ESC to return to user selection.", curses.A_DIM)
+            self.stdscr.addstr(start_y, (w - len(f"Statistics for {self.current_user.user_id}")) // 2, f"Statistics for {self.current_user.user_id}", curses.A_BOLD | curses.A_UNDERLINE)
+            self.stdscr.addstr(start_y + 2, (w - len(f"Games Played: {stats['games_played']}")) // 2, f"Games Played: {stats['games_played']}")
+            self.stdscr.addstr(start_y + 3, (w - len(f"Games Won: {stats['games_won']}")) // 2, f"Games Won: {stats['games_won']}")
+            self.stdscr.addstr(start_y + 4, (w - len(f"Words Revealed: {stats['words_revealed']}")) // 2, f"Words Revealed: {stats['words_revealed']}")
+            self.stdscr.addstr(start_y + 5, (w - len(f"Longest Word Revealed: {stats['longest_word_revealed']}")) // 2, f"Longest Word Revealed: {stats['longest_word_revealed']}")
+            self.stdscr.addstr(start_y + 6, (w - len(f"Mines Stepped: {stats['mines_stepped']}")) // 2, f"Mines Stepped: {stats['mines_stepped']}")
+            self.stdscr.addstr(start_y + 7, (w - len(f"Highest Score (Classic Mode): {stats['highest_score_classic']}")) // 2, f"Highest Score (Classic Mode): {stats['highest_score_classic']}")
+            self.stdscr.addstr(start_y + 8, (w - len(f"Highest Score (Timed Mode): {stats['highest_score_timed']}")) // 2, f"Highest Score (Timed Mode): {stats['highest_score_timed']}")
+            self.stdscr.addstr(start_y + 9, (w - len(f"Minimum Steps Used: {stats['min_steps_used']}")) // 2, f"Minimum Steps Used: {stats['min_steps_used']}")
+            self.stdscr.addstr(start_y + 10, (w - len(f"Average Steps Used: {self.current_user.average_steps_used()}")) // 2, f"Average Steps Used: {self.current_user.average_steps_used()}")
+            self.stdscr.addstr(start_y + 12, (w - len("Press ESC to return to user selection.")) // 2, "Press ESC to return to user selection.", curses.A_DIM)
 
             # Refresh the window to show the changes
-            stats_win.refresh()
+            self.stdscr.refresh()
 
             # Wait for user input to return to user selection
             while True:
