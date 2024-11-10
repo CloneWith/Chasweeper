@@ -289,6 +289,14 @@ class Board:
                     count += 1
         return str(count) if count > 0 else ' '  # Return the count as a string, or a space if count is 0
 
+    def display_user_info(self):
+        h, w = self.stdscr.getmaxyx()
+        user_info_win = curses.newwin(5, 30, 1, w - 31)
+        user_info_win.box()
+        user_info_win.addstr(1, 1, f"Username: ", curses.A_BOLD)
+        user_info_win.addstr(1, 11, f"{self.user.user_id}")
+        user_info_win.refresh()
+
     def draw_board(self):
         self.stdscr.clear()
         h, w = self.stdscr.getmaxyx()
@@ -477,6 +485,7 @@ class Board:
 
             curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
             self.draw_board()
+            self.display_user_info()
             while True:
                 if not self.check_window_size():
                     break
