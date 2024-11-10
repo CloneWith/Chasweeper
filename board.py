@@ -28,6 +28,7 @@ class Board:
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
+        self.words_revealed_counter = 0  # Initialize words revealed counter
 
     def load_words(self):
         words = []
@@ -112,7 +113,7 @@ class Board:
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
-            self.word_reveal_status[word] = []
+            self.word_reveal_status[word] = [False] * len(word)
 
         # Randomly place words on the board
         placed_letters = set()
@@ -507,6 +508,7 @@ class Board:
             for i in range(len(word)):
                 if self.board[row + i][col] != word[i] or self.covered[row + i][col]:
                     return False
+        self.reveal_word(word)  # Reveal the word if it is successfully revealed
         return True
 
     def check_all_words_revealed(self):
@@ -530,10 +532,17 @@ class Board:
         return True
 
     def update_stats(self, game_won):
-        self.user_stats['games_played'] += 1
+        if game_won:
+            self.user_stats['games_played'] += 1
+        self.user_stats['words_revealed'] += self.words_revealed_counter
         if game_won:
             self.user_stats['games_won'] += 1
         self.save_user_stats()
+
+    def reveal_word(self, word):
+        if word not in self.revealed_words:
+            self.revealed_words.add(word)
+            self.words_revealed_counter += 1
 
     def run(self):
         while True:
@@ -550,6 +559,7 @@ class Board:
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
                     if self.exit_prompt:
+                        self.update_stats(game_won=False)
                         curses.endwin()
                         return
                     else:
