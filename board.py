@@ -29,6 +29,7 @@ class Board:
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
         self.words_revealed_counter = 0  # Initialize words revealed counter
+        self.longest_word_revealed = ""  # Initialize longest word revealed
 
     def load_words(self):
         words = []
@@ -418,7 +419,6 @@ class Board:
             self.stdscr.addstr(win_msg_y, w - 30, "Congratulations!")
             self.stdscr.addstr(win_msg_y + 1, w - 30, "You found all the words!")
             self.stdscr.addstr(win_msg_y + 3, w - 30, "Press N for New Game")
-            self.stdscr.addstr(win_msg_y + 4, w - 30, "Press Q to Quit")
 
         self.stdscr.refresh()
 
@@ -530,9 +530,10 @@ class Board:
         return True
 
     def update_stats(self, game_won):
-        if game_won:
-            self.user_stats['games_played'] += 1
+        self.user_stats['games_played'] += 1
         self.user_stats['words_revealed'] += self.words_revealed_counter
+        if len(self.longest_word_revealed) > len(self.user_stats['longest_word_revealed']):
+            self.user_stats['longest_word_revealed'] = self.longest_word_revealed
         if game_won:
             self.user_stats['games_won'] += 1
         self.save_user_stats()
@@ -541,6 +542,8 @@ class Board:
         if word not in self.revealed_words:
             self.revealed_words.add(word)
             self.words_revealed_counter += 1
+            if len(word) > len(self.longest_word_revealed):
+                self.longest_word_revealed = word
 
     def run(self):
         while True:
@@ -557,7 +560,7 @@ class Board:
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
                     if self.exit_prompt:
-                        self.update_stats(game_won=False)
+                        self.update_stats(self.game_won)
                         curses.endwin()
                         return
                     else:
@@ -566,12 +569,9 @@ class Board:
                 elif key == ord('n') and self.game_won:
                     self.__init__(self.stdscr, self.user, self.size)
                     self.run()
-                elif key == ord('q') and self.game_won:
-                    curses.endwin()
-                    break
                 elif self.check_all_words_revealed():
                     self.game_won = True
-                    self.update_stats(game_won=True)
+                    self.update_stats(True)
                     self.stdscr.refresh()
                 elif key == curses.KEY_MOUSE and not self.game_won:
                     _, mx, my, _, button_state = curses.getmouse()
