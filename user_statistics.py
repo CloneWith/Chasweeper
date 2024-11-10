@@ -32,12 +32,7 @@ class UserStatistics:
             x = (w - len(message)) // 2
             size_prompt.addstr(y, x, message, curses.A_BOLD)
             size_prompt.refresh()
-            while True:
-                key = size_prompt.getch()
-                if key == curses.KEY_RESIZE:
-                    h, w = self.stdscr.getmaxyx()
-                    if h >= min_height and w >= min_width:
-                        break
+            size_prompt.getch()  # Wait for user input
             return False
         return True
 
@@ -52,6 +47,7 @@ class UserStatistics:
                 self.display_user_stats()
 
     def select_user(self):
+        current_row = 0
         while True:
             if not self.check_window_size():
                 continue
@@ -71,8 +67,15 @@ class UserStatistics:
             else:
                 self.stdscr.addstr(h // 2 - len(self.users) // 2 - 1, (w - len("Select a user to view statistics:")) // 2, "Select a user to view statistics:", curses.A_BOLD | curses.A_UNDERLINE)
                 for idx, user in enumerate(self.users):
-                    self.stdscr.addstr(h // 2 - len(self.users) // 2 + idx, (w - len(f"{idx + 1}. {user.user_id}")) // 2, f"{idx + 1}. {user.user_id}")
-                self.stdscr.addstr(h // 2 + len(self.users) // 2 + 1, (w - len("Press ESC to return to the main menu.")) // 2, "Press ESC to return to the main menu.", curses.A_DIM)
+                    x = (w - len(f"{idx + 1}. {user.user_id}")) // 2
+                    y = h // 2 - len(self.users) // 2 + idx
+                    if idx == current_row:
+                        self.stdscr.attron(curses.color_pair(1))
+                        self.stdscr.addstr(y, x, f"{idx + 1}. {user.user_id}")
+                        self.stdscr.attroff(curses.color_pair(1))
+                    else:
+                        self.stdscr.addstr(y, x, f"{idx + 1}. {user.user_id}")
+                self.stdscr.addstr(h // 2 + len(self.users) // 2 + 4, (w - len("Press ESC to return to the main menu.")) // 2, "Press ESC to return to the main menu.", curses.A_DIM)
                 self.stdscr.refresh()
 
                 while True:
@@ -81,9 +84,23 @@ class UserStatistics:
                     key = self.stdscr.getch()
                     if key == 27:  # ESC key
                         return False
-                    elif ord('1') <= key <= ord(str(len(self.users))):
-                        self.current_user = self.users[key - ord('1')]
+                    elif key == curses.KEY_UP and current_row > 0:
+                        current_row -= 1
+                        break
+                    elif key == curses.KEY_DOWN and current_row < len(self.users) - 1:
+                        current_row += 1
+                        break
+                    elif key == curses.KEY_ENTER or key in [10, 13]:
+                        self.current_user = self.users[current_row]
                         return True
+                    elif key == curses.KEY_MOUSE:
+                        _, mx, my, _, _ = curses.getmouse()
+                        for idx, user in enumerate(self.users):
+                            x = (w - len(f"{idx + 1}. {user.user_id}")) // 2
+                            y = h // 2 - len(self.users) // 2 + idx
+                            if y == my and x <= mx <= x + len(f"{idx + 1}. {user.user_id}"):
+                                self.current_user = self.users[idx]
+                                return True
 
     def display_user_stats(self):
         while True:
