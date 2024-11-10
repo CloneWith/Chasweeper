@@ -560,7 +560,8 @@ class Board:
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
                     if self.exit_prompt:
-                        self.update_stats(self.game_won)
+                        if not self.game_won:
+                            self.update_stats(self.game_won)
                         curses.endwin()
                         return
                     else:
@@ -571,7 +572,6 @@ class Board:
                     self.run()
                 elif self.check_all_words_revealed():
                     self.game_won = True
-                    self.update_stats(True)
                     self.stdscr.refresh()
                 elif key == curses.KEY_MOUSE and not self.game_won:
                     _, mx, my, _, button_state = curses.getmouse()
@@ -627,6 +627,7 @@ class Board:
                             self.draw_board()
                             if self.check_all_words_revealed():
                                 self.game_won = True
+                                self.update_stats(self.game_won)
                                 self.draw_board()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
