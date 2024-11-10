@@ -132,7 +132,7 @@ class Menu:
         self.current_row = 0
 
     def view_statistics(self):
-        stats = UserStatistics(self.stdscr, self.current_user)
+        stats = UserStatistics(self.stdscr)
         stats.display()
         self.current_menu = "main"
         self.current_row = 0
