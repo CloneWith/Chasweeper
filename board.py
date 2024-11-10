@@ -61,6 +61,31 @@ class Board:
                         break
         return user_stats
 
+    def save_user_stats(self):
+        if os.path.exists('./data/user.txt'):
+            with open('./data/user.txt', 'r') as file:
+                lines = file.readlines()
+            with open('./data/user.txt', 'w') as file:
+                for line in lines:
+                    data = line.strip().split(',')
+                    if len(data) == 11 and data[0] == self.user.user_id:
+                        data[1] = str(self.user_stats['games_played'])
+                        data[2] = str(self.user_stats['games_won'])
+                        data[3] = str(self.user_stats['words_revealed'])
+                        data[4] = self.user_stats['longest_word_revealed']
+                        data[5] = str(self.user_stats['mines_stepped'])
+                        data[6] = str(self.user_stats['highest_score_classic'])
+                        data[7] = str(self.user_stats['highest_score_timed'])
+                        data[8] = str(self.user_stats['average_steps_used'])
+                        data[9] = str(self.user_stats['min_steps_used'])
+                        data[10] = str(self.user_stats['max_steps_used'])
+                        file.write(','.join(data) + '\n')
+                    else:
+                        file.write(line)
+        else:
+            with open('./data/user.txt', 'w') as file:
+                file.write(f"{self.user.user_id},{self.user_stats['games_played']},{self.user_stats['games_won']},{self.user_stats['words_revealed']},{self.user_stats['longest_word_revealed']},{self.user_stats['mines_stepped']},{self.user_stats['highest_score_classic']},{self.user_stats['highest_score_timed']},{self.user_stats['average_steps_used']},{self.user_stats['min_steps_used']},{self.user_stats['max_steps_used']}\n")
+
     def fill_board(self):
         # Reset the board and related variables
         self.board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
@@ -504,6 +529,12 @@ class Board:
             return False
         return True
 
+    def update_stats(self, game_won):
+        self.user_stats['games_played'] += 1
+        if game_won:
+            self.user_stats['games_won'] += 1
+        self.save_user_stats()
+
     def run(self):
         while True:
             if not self.check_window_size():
@@ -530,6 +561,10 @@ class Board:
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
                     break
+                elif self.check_all_words_revealed():
+                    self.game_won = True
+                    self.update_stats(game_won=True)
+                    self.stdscr.refresh()
                 elif key == curses.KEY_MOUSE and not self.game_won:
                     _, mx, my, _, button_state = curses.getmouse()
                     h, w = self.stdscr.getmaxyx()
