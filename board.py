@@ -111,7 +111,7 @@ class Board:
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
-            self.word_reveal_status[word] = [False] * len(word)
+            self.word_reveal_status[word] = []
 
         # Randomly place words on the board
         placed_letters = set()
@@ -506,7 +506,6 @@ class Board:
             for i in range(len(word)):
                 if self.board[row + i][col] != word[i] or self.covered[row + i][col]:
                     return False
-        self.reveal_word(word)  # Reveal the word if it is successfully revealed
         return True
 
     def check_all_words_revealed(self):
@@ -537,13 +536,6 @@ class Board:
         if game_won:
             self.user_stats['games_won'] += 1
         self.save_user_stats()
-
-    def reveal_word(self, word):
-        if word not in self.revealed_words:
-            self.revealed_words.add(word)
-            self.words_revealed_counter += 1
-            if len(word) > len(self.longest_word_revealed):
-                self.longest_word_revealed = word
 
     def run(self):
         while True:
