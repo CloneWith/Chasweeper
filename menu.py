@@ -167,38 +167,42 @@ class Menu:
         board.run()
 
     def register(self):
-        self.stdscr.addstr(13, 10, "Enter user ID: ")
-        curses.echo()
-        user_id = self.stdscr.getstr().decode('utf-8')
-        curses.noecho()
+        while True:
+            self.stdscr.clear()
+            self.stdscr.addstr(13, 10, "Enter user ID: ")
+            curses.echo()
+            user_id = self.stdscr.getstr().decode('utf-8')
+            curses.noecho()
 
-        # Validate username
-        if len(user_id) > 16:
-            self.stdscr.addstr(14, 10, "Username cannot be longer than 16 characters. Press any key to continue.")
-            self.stdscr.getch()
-            return
-        if not re.match(r'^[A-Za-z0-9 _-]+$', user_id):
-            self.stdscr.addstr(14, 10, "Username can only contain letters, numbers, spaces, underscores, and hyphens. Press any key to continue.")
-            self.stdscr.getch()
-            return
-        if user_id[0] == ' ' or user_id[-1] == ' ':
-            self.stdscr.addstr(14, 10, "Username cannot start or end with a space. Press any key to continue.")
-            self.stdscr.getch()
-            return
-        if not re.match(r'^[A-Za-z0-9 _-]+$', user_id):
-            self.stdscr.addstr(14, 10, "Username can only contain letters, numbers, spaces, underscores, and hyphens. Press any key to continue.")
-            self.stdscr.getch()
-            return
+            # Validate username
+            if len(user_id) > 16:
+                self.stdscr.addstr(14, 10, "Username cannot be longer than 16 characters. Press any key to re-enter username.")
+                self.stdscr.getch()
+                continue
+            if not re.match(r'^[A-Za-z0-9 _-]+$', user_id):
+                self.stdscr.addstr(14, 10, "Username can only contain letters, numbers, spaces, underscores, and hyphens. Press any key to re-enter username.")
+                self.stdscr.getch()
+                continue
+            if user_id[0] == ' ' or user_id[-1] == ' ':
+                self.stdscr.addstr(14, 10, "Username cannot start or end with a space. Press any key to re-enter username.")
+                self.stdscr.getch()
+                continue
+            if not re.match(r'^[A-Za-z0-9 _-]+$', user_id):
+                self.stdscr.addstr(14, 10, "Username can only contain letters, numbers, spaces, underscores, and hyphens. Press any key to re-enter username.")
+                self.stdscr.getch()
+                continue
 
-        if User.load_from_file(user_id):
-            self.stdscr.addstr(14, 10, "User ID already exists. Press any key to continue.")
-            self.stdscr.getch()
-        else:
-            user = User(user_id)
-            user.save_to_file()
-            self.users.append(user)
-            self.stdscr.addstr(14, 10, "Registration successful. Press any key to continue.")
-            self.stdscr.getch()
+            if User.load_from_file(user_id):
+                self.stdscr.addstr(14, 10, "User ID already exists. Press any key to re-enter username.")
+                self.stdscr.getch()
+                continue
+            else:
+                user = User(user_id)
+                user.save_to_file()
+                self.users.append(user)
+                self.stdscr.addstr(14, 10, "Registration successful. Press any key to re-enter username.")
+                self.stdscr.getch()
+                break
         self.current_menu = "main"
         self.current_row = 0
 
