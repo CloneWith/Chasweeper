@@ -21,7 +21,8 @@ class UserStatistics:
     def display(self):
         while True:
             if self.current_user is None:
-                self.select_user()
+                if not self.select_user():
+                    break  # Exit the loop if ESC is pressed in select_user
             else:
                 self.display_user_stats()
 
@@ -36,7 +37,7 @@ class UserStatistics:
             while True:
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
-                    return
+                    return False
         else:
             self.stdscr.addstr(0, 0, "Select a user to view statistics:", curses.A_BOLD | curses.A_UNDERLINE)
             for idx, user in enumerate(self.users):
@@ -47,10 +48,10 @@ class UserStatistics:
             while True:
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
-                    return
+                    return False
                 elif ord('1') <= key <= ord(str(len(self.users))):
                     self.current_user = self.users[key - ord('1')]
-                    return
+                    return True
 
     def display_user_stats(self):
         self.stdscr.clear()
