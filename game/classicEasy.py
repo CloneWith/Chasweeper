@@ -700,7 +700,6 @@ class Board:
                     curses.endwin()
                     break
                 else:
-                    self.exit_prompt = False
                     self.draw_board()
 
 if __name__ == "__main__":
