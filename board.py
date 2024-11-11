@@ -1,4 +1,5 @@
 import curses
+import math
 import random
 
 class Board:
@@ -519,7 +520,8 @@ class Board:
                                 revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
                                 total_cells = self.size * self.size
                                 base_penalty = 1000
-                                penalty = base_penalty * (1 + revealed_cells / total_cells)
+                                k = (220 - total_cells) / 3000
+                                penalty = (math.exp(k * (revealed_cells - 5)) - total_cells / 900) * base_penalty
                                 self.score -= int(penalty)  # Dynamic penalty for revealing a mine
                                 for word in self.selected_words:
                                     self.word_reveal_status[word] = []  # Reset word reveal status for all words
@@ -540,9 +542,9 @@ class Board:
                                     words_left = len(self.selected_words) - len(self.revealed_words)
                                     if words_left == 3 and self.random_click_counter > 10:
                                         self.score -= 1000  # Penalty for random clicks
-                                    elif words_left == 2 and self.random_click_counter > 8:
+                                    elif words_left == 2 and self.random_click_counter > 9:
                                         self.score -= 1500  # Penalty for random clicks
-                                    elif words_left == 1 and self.random_click_counter > 6:
+                                    elif words_left == 1 and self.random_click_counter > 7:
                                         self.score -= 2000  # Penalty for random clicks
                                 self.check_revealed_words()  # This will now only score for full word reveals
                             self.draw_board()
