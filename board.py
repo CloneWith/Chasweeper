@@ -621,7 +621,7 @@ class Board:
                                             self.current_word = word
                                         if self.current_word == word:
                                             self.word_reveal_status[word].append((cell_y, cell_x))
-                                if not is_part_of_word:
+                                if (not is_part_of_word) or (is_part_of_word and self.random_click_counter == 0):
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
                                     if words_left == 3:
