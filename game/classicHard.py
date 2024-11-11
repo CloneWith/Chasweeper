@@ -642,7 +642,7 @@ class Board:
                                         self.base_penalty_random = 400
                                     elif words_left == 4:
                                         self.base_penalty_random = 800
-                                    if words_left == 3:
+                                    elif words_left == 3:
                                         self.base_penalty_random = 1100  # Penalty for random clicks
                                     elif words_left == 2:
                                         self.base_penalty_random = 1500  # Penalty for random clicks
