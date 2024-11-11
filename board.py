@@ -346,6 +346,8 @@ class Board:
         user_info_win.addstr(1, 12, f"{self.user.user_id}", curses.A_BOLD)
         user_info_win.addstr(2, 2, f"Highest Score: ")
         user_info_win.addstr(2, 17, f"{self.user_stats.get('highest_score_classic', 'N/A')}", curses.A_BOLD)
+        user_info_win.addstr(3, 2, f"Games Won: ")
+        user_info_win.addstr(3, 13, f"{self.user_stats.get('games_won', 0)}", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
