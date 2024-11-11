@@ -4,7 +4,7 @@ def calculate_complexity(word):
 
 def update_words_file():
     words = []
-    with open('words.txt', 'r') as file:
+    with open('./data/words.txt', 'r') as file:
         for line in file:
             parts = line.strip().split(',')
             if len(parts) == 2:
@@ -15,7 +15,7 @@ def update_words_file():
             words.append((word, complexity))
 
     updated = False
-    with open('words.txt', 'w') as file:
+    with open('./data/words.txt', 'w') as file:
         for word, complexity in words:
             if complexity is None:
                 complexity = calculate_complexity(word)

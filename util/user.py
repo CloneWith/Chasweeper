@@ -17,16 +17,16 @@ class User:
         }
 
     def save_to_file(self):
-        if not os.path.exists('../data'):
-            os.makedirs('../data')
-        with open('../data/user.txt', 'a') as file:
+        if not os.path.exists('./data'):
+            os.makedirs('./data')
+        with open('./data/user.txt', 'a') as file:
             file.write(f"{self.user_id},{self.stats['games_played']},{self.stats['games_won']},{self.stats['words_revealed']},{self.stats['longest_word_revealed']},{self.stats['mines_stepped']},{self.stats['highest_score_classic']},{self.stats['highest_score_timed']},{self.stats['min_steps_used']},{self.stats['total_steps']},{self.stats['games_played_steps']}\n")
 
     @staticmethod
     def load_from_file(user_id):
-        if not os.path.exists('../data/user.txt'):
+        if not os.path.exists('./data/user.txt'):
             return None
-        with open('../data/user.txt', 'r') as file:
+        with open('./data/user.txt', 'r') as file:
             for line in file:
                 data = line.strip().split(',')
                 if data[0] == user_id:
@@ -35,17 +35,17 @@ class User:
         return None
 
     def update_file(self):
-        if not os.path.exists('../data/user.txt'):
+        if not os.path.exists('./data/user.txt'):
             return
         lines = []
-        with open('../data/user.txt', 'r') as file:
+        with open('./data/user.txt', 'r') as file:
             for line in file:
                 data = line.strip().split(',')
                 if data[0] == self.user_id:
                     lines.append(f"{self.user_id},{self.stats['games_played']},{self.stats['games_won']},{self.stats['words_revealed']},{self.stats['longest_word_revealed']},{self.stats['mines_stepped']},{self.stats['highest_score_classic']},{self.stats['highest_score_timed']},{self.stats['min_steps_used']},{self.stats['total_steps']},{self.stats['games_played_steps']}\n")
                 else:
                     lines.append(line)
-        with open('../data/user.txt', 'w') as file:
+        with open('./data/user.txt', 'w') as file:
             file.writelines(lines)
 
     def average_steps_used(self):
