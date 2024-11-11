@@ -1,10 +1,12 @@
 import curses
 import math
 import random
+import os
 
 class Board:
-    def __init__(self, stdscr, size=7):
+    def __init__(self, stdscr, user, size=7):
         self.stdscr = stdscr
+        self.user = user
         self.size = size
         self.board = [[' ' for _ in range(size)] for _ in range(size)]
         self.covered = [[True for _ in range(size)] for _ in range(size)]
@@ -26,6 +28,7 @@ class Board:
         self.score = 0  # Initialize score
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
+        self.user_stats = self.load_user_stats()
 
     def load_words(self):
         words = []
@@ -36,6 +39,53 @@ class Board:
                 words.append(word)
                 word_complexity[word] = int(complexity)
         return words, word_complexity
+
+    def load_user_stats(self):
+        user_stats = {}
+        if os.path.exists('./data/user.txt'):
+            with open('./data/user.txt', 'r') as file:
+                for line in file:
+                    data = line.strip().split(',')
+                    if len(data) == 11 and data[0] == self.user.user_id:  # Ensure the correct number of fields and match user ID
+                        user_stats = {
+                            'games_played': int(data[1]),
+                            'games_won': int(data[2]),
+                            'words_revealed': int(data[3]),
+                            'longest_word_revealed': data[4],
+                            'mines_stepped': int(data[5]),
+                            'highest_score_classic': int(data[6]),
+                            'highest_score_timed': int(data[7]),
+                            'average_steps_used': float(data[8]),
+                            'min_steps_used': int(data[9]),
+                            'max_steps_used': int(data[10])
+                        }
+                        break
+        return user_stats
+
+    def save_user_stats(self):
+        if os.path.exists('./data/user.txt'):
+            with open('./data/user.txt', 'r') as file:
+                lines = file.readlines()
+            with open('./data/user.txt', 'w') as file:
+                for line in lines:
+                    data = line.strip().split(',')
+                    if len(data) == 11 and data[0] == self.user.user_id:
+                        data[1] = str(self.user_stats['games_played'])
+                        data[2] = str(self.user_stats['games_won'])
+                        data[3] = str(self.user_stats['words_revealed'])
+                        data[4] = self.user_stats['longest_word_revealed']
+                        data[5] = str(self.user_stats['mines_stepped'])
+                        data[6] = str(self.user_stats['highest_score_classic'])
+                        data[7] = str(self.user_stats['highest_score_timed'])
+                        data[8] = str(self.user_stats['average_steps_used'])
+                        data[9] = str(self.user_stats['min_steps_used'])
+                        data[10] = str(self.user_stats['max_steps_used'])
+                        file.write(','.join(data) + '\n')
+                    else:
+                        file.write(line)
+        else:
+            with open('./data/user.txt', 'w') as file:
+                file.write(f"{self.user.user_id},{self.user_stats['games_played']},{self.user_stats['games_won']},{self.user_stats['words_revealed']},{self.user_stats['longest_word_revealed']},{self.user_stats['mines_stepped']},{self.user_stats['highest_score_classic']},{self.user_stats['highest_score_timed']},{self.user_stats['average_steps_used']},{self.user_stats['min_steps_used']},{self.user_stats['max_steps_used']}\n")
 
     def fill_board(self):
         # Reset the board and related variables
@@ -55,11 +105,8 @@ class Board:
         # Filter out words longer than the board size
         valid_words = [word for word in self.words if len(word) <= self.size]
 
-        # Assign weights to words based on their length
-        word_weights = [1 / len(word) for word in valid_words]
-
-        # Randomly select 3 words to place on the board with adjusted probabilities
-        self.selected_words = random.choices(valid_words, weights=word_weights, k=3)
+        # Randomly select 3 words to place on the board
+        self.selected_words = random.sample(valid_words, 3)
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
@@ -95,6 +142,7 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 if self.board[i][j] == ' ' and random.random() < 0.15:  # Chance to fill the cell
+                                                                        # Reduce this value to increase the number of empty cells
                     # Avoid using letters that are already placed in words
                     available_letters = [letter for letter in self.common_letters if letter not in placed_letters]
                     self.board[i][j] = random.choice(available_letters)  # Randomly choose a common letter
@@ -289,6 +337,16 @@ class Board:
                     count += 1
         return str(count) if count > 0 else ' '  # Return the count as a string, or a space if count is 0
 
+    def display_user_info(self):
+        h, w = self.stdscr.getmaxyx()
+        user_info_win = curses.newwin(7, 40, 1, w - 41)
+        user_info_win.border('|', '|', '-', '-', '+', '+', '+', '+')
+        user_info_win.addstr(1, 2, f"Player: ")
+        user_info_win.addstr(1, 12, f"{self.user.user_id}", curses.A_BOLD)
+        user_info_win.addstr(2, 2, f"Highest Score: ")
+        user_info_win.addstr(2, 17, f"{self.user_stats.get('highest_score_classic', 'N/A')}", curses.A_BOLD)
+        user_info_win.refresh()
+
     def draw_board(self):
         self.stdscr.clear()
         h, w = self.stdscr.getmaxyx()
@@ -360,7 +418,6 @@ class Board:
             self.stdscr.addstr(win_msg_y, w - 30, "Congratulations!")
             self.stdscr.addstr(win_msg_y + 1, w - 30, "You found all the words!")
             self.stdscr.addstr(win_msg_y + 3, w - 30, "Press N for New Game")
-            self.stdscr.addstr(win_msg_y + 4, w - 30, "Press Q to Quit")
 
         self.stdscr.refresh()
 
@@ -470,6 +527,14 @@ class Board:
             return False
         return True
 
+    def update_stats(self, game_won):
+        self.user_stats['games_played'] += 1
+        if game_won:
+            self.user_stats['games_won'] += 1
+        if self.score > self.user_stats['highest_score_classic']:
+            self.user_stats['highest_score_classic'] = self.score
+        self.save_user_stats()
+
     def run(self):
         while True:
             if not self.check_window_size():
@@ -480,21 +545,24 @@ class Board:
             while True:
                 if not self.check_window_size():
                     break
-
+                
+                self.display_user_info()
                 key = self.stdscr.getch()
                 if key == 27:  # ESC key
                     if self.exit_prompt:
+                        if not self.game_won:
+                            self.update_stats(self.game_won)
                         curses.endwin()
                         return
                     else:
                         self.exit_prompt = True
                         self.draw_board()
                 elif key == ord('n') and self.game_won:
-                    self.__init__(self.stdscr, self.size)
+                    self.__init__(self.stdscr, self.user, self.size)
                     self.run()
-                elif key == ord('q') and self.game_won:
-                    curses.endwin()
-                    break
+                elif self.check_all_words_revealed():
+                    self.game_won = True
+                    self.stdscr.refresh()
                 elif key == curses.KEY_MOUSE and not self.game_won:
                     _, mx, my, _, button_state = curses.getmouse()
                     h, w = self.stdscr.getmaxyx()
@@ -550,6 +618,7 @@ class Board:
                             self.draw_board()
                             if self.check_all_words_revealed():
                                 self.game_won = True
+                                self.update_stats(self.game_won)
                                 self.draw_board()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
