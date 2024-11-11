@@ -26,6 +26,7 @@ class Board:
         self.last_revealed = None  # Track the last revealed cell
         self.current_word = None  # Track the current word being revealed
         self.score = 0  # Initialize score
+        self.base_penalty_random = 0
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
@@ -620,18 +621,18 @@ class Board:
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
                                     if words_left == 3:
-                                        base_penalty_random = 1000  # Penalty for random clicks
+                                        self.base_penalty_random = 1000  # Penalty for random clicks
                                     elif words_left == 2:
-                                        base_penalty_random = 1500  # Penalty for random clicks
+                                        self.base_penalty_random = 1500  # Penalty for random clicks
                                     elif words_left == 1:
-                                        base_penalty_random = 2000  # Penalty for random clicks
+                                        self.base_penalty_random = 2000  # Penalty for random clicks
                                     else:
-                                        base_penalty_random = 0
+                                        self.base_penalty_random = 0
                                     
-                                    if self.random_click_cap is not None:
-                                        penalty_multiplier_value = self.penalty_multiplier(self.random_click_counter, self.random_click_cap)
-                                        penalty_random = int(base_penalty_random * penalty_multiplier_value)
-                                        self.score -= penalty_random
+                                if self.random_click_cap is not None:
+                                    penalty_multiplier_value = self.penalty_multiplier(self.random_click_counter, self.random_click_cap)
+                                    penalty_random = int(self.base_penalty_random * penalty_multiplier_value)
+                                    self.score -= penalty_random
                                 self.check_revealed_words()  # This will now only score for full word reveals
                             self.draw_board()
                             if self.check_all_words_revealed():
