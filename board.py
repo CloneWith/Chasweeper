@@ -32,7 +32,7 @@ class Board:
     def load_words(self):
         words = []
         word_complexity = {}
-        with open('words.txt', 'r') as file:
+        with open('./data/words.txt', 'r') as file:
             for line in file:
                 word, complexity = line.strip().split(',')
                 words.append(word)
