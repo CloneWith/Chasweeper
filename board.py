@@ -18,7 +18,6 @@ class Board:
         self.common_letters = "ETAOINSHRDLCUMWFGYPBVKJXQZ"
         self.fill_board()
         self.exit_prompt = False
-        self.menu_button_clicked = False
         self.game_won = False
         self.move_count = 0  # Initialize move counter
         self.last_revealed = None  # Track the last revealed cell
@@ -55,8 +54,11 @@ class Board:
         # Filter out words longer than the board size
         valid_words = [word for word in self.words if len(word) <= self.size]
 
-        # Randomly select 3 words to place on the board
-        self.selected_words = random.sample(valid_words, 3)
+        # Assign weights to words based on their length
+        word_weights = [1 / len(word) for word in valid_words]
+
+        # Randomly select 3 words to place on the board with adjusted probabilities
+        self.selected_words = random.choices(valid_words, weights=word_weights, k=3)
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
@@ -92,7 +94,6 @@ class Board:
         for i in range(self.size):
             for j in range(self.size):
                 if self.board[i][j] == ' ' and random.random() < 0.15:  # Chance to fill the cell
-                                                                        # Reduce this value to increase the number of empty cells
                     # Avoid using letters that are already placed in words
                     available_letters = [letter for letter in self.common_letters if letter not in placed_letters]
                     self.board[i][j] = random.choice(available_letters)  # Randomly choose a common letter
@@ -125,64 +126,156 @@ class Board:
 
     def calculate_mine_hint(self, row, col):
         hint = [' ', ' ']
-        mines = {
-            'top_left': False, 'top': False, 'top_right': False,
-            'left': False, 'right': False,
-            'bottom_left': False, 'bottom': False, 'bottom_right': False
-        }
 
-        for i in range(max(0, row - 1), min(self.size, row + 2)):
-            for j in range(max(0, col - 1), min(self.size, col + 2)):
-                if self.board[i][j] == '✱':
-                    if i < row and j < col:
-                        mines['top_left'] = True
-                    elif i < row and j == col:
-                        mines['top'] = True
-                    elif i < row and j > col:
-                        mines['top_right'] = True
-                    elif i == row and j < col:
-                        mines['left'] = True
-                    elif i == row and j > col:
-                        mines['right'] = True
-                    elif i > row and j < col:
-                        mines['bottom_left'] = True
-                    elif i > row and j == col:
-                        mines['bottom'] = True
-                    elif i > row and j > col:
-                        mines['bottom_right'] = True
+        def has_mine_in_direction(dir_row, dir_col):
+            new_row = row + dir_row
+            new_col = col + dir_col
+            if 0 <= new_row < self.size and 0 <= new_col < self.size:
+                if self.board[new_row][new_col] == '✱':
+                    return True
+            return False
 
-        # Determine the hint based on the mines' positions
-        if mines['top'] and not (mines['top_left'] or mines['top_right']):
+        # Check for mines in all 8 directions
+        top = has_mine_in_direction(-1, 0)
+        bottom = has_mine_in_direction(1, 0)
+        left = has_mine_in_direction(0, -1)
+        right = has_mine_in_direction(0, 1)
+        top_left = has_mine_in_direction(-1, -1)
+        bottom_left = has_mine_in_direction(1, -1)
+        top_right = has_mine_in_direction(-1, 1)
+        bottom_right = has_mine_in_direction(1, 1)
+
+        # Special case: three mines in a same row
+        if top and top_left and top_right:
             hint[0] = '⠁'
-        if mines['bottom'] and not (mines['bottom_left'] or mines['bottom_right']):
-            hint[1] = '⢀'
-        if mines['left'] and not (mines['top_left'] or mines['bottom_left']):
-            hint[0] = '⡀'
-        if mines['right'] and not (mines['top_right'] or mines['bottom_right']):
-            hint[1] = '⠈'
+            hint[1] = '⠈'  # Top, top-left, and top-right can be represented as ⠁⠈
 
-        # Special cases for combined hints
-        if mines['top_left'] and mines['bottom_left']:
+        if bottom and bottom_left and bottom_right:
+            hint[0] = '⡀'
+            hint[1] = '⢀'  # Bottom, bottom-left, and bottom-right can be represented as ⡀⢀
+
+        # Special case: three mines in a same column
+        if left and top_left and bottom_left:
             hint[0] = '⡁'
-        elif mines['top_left']:
-            hint[0] = '⠁'
-        elif mines['bottom_left']:
-            hint[0] = '⡀'
-
-        if mines['top_right'] and mines['bottom_right']:
+        if right and top_right and bottom_right:
             hint[1] = '⢈'
-        elif mines['top_right']:
+        
+        # Special case: three mines on the same direction
+        if top and top_left and left:
+            hint[0] = '⠁'
+        if top and top_right and right:
             hint[1] = '⠈'
-        elif mines['bottom_right']:
+        if bottom and bottom_left and left:
+            hint[0] = '⡀'
+        if bottom and bottom_right and right:
             hint[1] = '⢀'
 
-        # Handle cases where there are mines in both directions
-        if mines['top'] and mines['bottom']:
-            hint[0] = '⠁'
-            hint[1] = '⢀'
-        if mines['left'] and mines['right']:
+        # Special case: three mines forming < or > shape
+        if top and left and bottom:
+            hint[0] = '⡁'
+            # Top and left
+            if top and left:
+                hint[0] = '⠁'  # Top and left, use ⠁ for top
+            # Bottom and left
+            if bottom and left:
+                hint[0] = '⡀'  # Bottom and left, use ⡀
+
+        if top and right and bottom:
+            hint[1] = '⢈'
+            # Top and right
+            if top and right:
+                hint[1] = '⠈'  # Top and right, use ⠈ for right
+            # Right and bottom
+            if right and bottom:
+                hint[1] = '⢀'  # Right and bottom, use ⢀
+
+        # Bottom and bottom-left/bottom-right
+        if bottom and bottom_left:
+            hint[0] = '⡀'  # Bottom and bottom-left only needs one dot (⡀)
+        elif bottom and bottom_right:
+            hint[1] = '⢀'  # Bottom and bottom-right only needs one dot (⢀)
+
+        ### Special cases: two mines in same row or column
+        # Top and top-left/top-right
+        if top and top_left:
+            hint[0] = '⠁'  # Top and top-left only needs one dot (⠁)
+        elif top and top_right:
+            hint[1] = '⠈'  # Top and top-right only needs one dot (⠈)
+
+        ### Special cases: opposite directions
+        # Left and right
+        if left and right:
             hint[0] = '⡀'
-            hint[1] = '⠈'
+            hint[1] = '⠈'  # Left and right can be represented as ⡀⠈
+
+        # Top and bottom
+        if top and bottom:
+            if hint[0] == ' ':
+                hint[0] = '⠁'
+            if hint[1] == ' ':
+                hint[1] = '⢀'  # Top and bottom can be represented as ⠁⢀
+
+        # Special case: two mines in the same row on corners
+        if top_left and top_right:
+            hint[0] = '⠁'
+            hint[1] = '⠈'  # Top-left and top-right can be represented as ⠁⠈
+
+        if bottom_left and bottom_right:
+            hint[0] = '⡀'
+            hint[1] = '⢀'  # Bottom-left and bottom-right can be represented as ⡀⢀
+
+        if left and top_left and hint[0] == ' ':
+            hint[0] = '⠁'  # Combine left and top-left as one dot (⠁)
+        elif left and bottom_left and hint[0] == ' ':
+            hint[0] = '⡀'  # Combine left and bottom-left as one dot (⡀)
+        elif top_left and bottom_left and hint[0] == ' ':
+            hint[0] = '⡁'  # Combine top-left and bottom-left as ⡁
+        else:
+            if left:
+                hint[0] = '⡀'
+            if top_left:
+                hint[0] = '⠁'
+            if bottom_left:
+                hint[0] = '⡀'
+
+        if right and top_right and hint[1] == ' ':
+            hint[1] = '⠈'  # Combine right and top-right as one dot (⠈)
+        elif right and bottom_right and hint[1] == ' ':
+            hint[1] = '⢀'  # Combine right and bottom-right as one dot (⢀)
+        elif top_right and bottom_right and hint[1] == ' ':
+            hint[1] = '⢈'  # Combine top-right and bottom-right as ⢈
+        else:
+            if right:
+                hint[1] = '⠈'
+            if top_right:
+                hint[1] = '⠈'
+            if bottom_right:
+                hint[1] = '⢀'
+
+        # Updated `if top:` condition
+        if top:
+            if not (hint[0] in ['⠁', '⡁'] or hint[1] in ['⢈', '⠈']):
+                if hint[0] == ' ':
+                    hint[0] = '⠁'
+                elif hint[1] == ' ':
+                    hint[1] = '⠈'
+                elif hint[0] == '⡀':
+                    hint[0] = '⡁'
+                elif hint[1] == '⢀':
+                    hint[1] = '⢈'
+
+        if bottom:
+            if not (hint[0] in ['⡀', '⡁'] or hint[1] in ['⢈', '⢀']):
+                if hint[0] == ' ':
+                    hint[0] = '⡀'
+                elif hint[1] == ' ':
+                    hint[1] = '⢀'
+                elif hint[0] == '⠁':
+                    hint[0] = '⡁'
+                elif hint[1] == '⠈':
+                    hint[1] = '⢈'
+            
+            
 
         return hint
 
@@ -254,12 +347,6 @@ class Board:
             y = start_y + self.size * 2
             self.stdscr.addstr(y, x, '+---')
         self.stdscr.addstr(y, x + 4, '+')
-
-        # Draw the menu button and exit prompt on the same line
-        if self.menu_button_clicked:
-            self.stdscr.addstr(h - 2, w - 20, "[Click again to quit]", curses.A_REVERSE)
-        else:
-            self.stdscr.addstr(h - 2, w - 12, "[ Menu ]", curses.A_REVERSE)
 
         if self.exit_prompt:
             self.stdscr.addstr(h - 2, w - 50, "* Wanna quit? Press esc again to quit.")
@@ -365,97 +452,109 @@ class Board:
     def check_all_words_revealed(self):
         return all(word in self.revealed_words for word in self.selected_words)
 
+    def check_window_size(self):
+        h, w = self.stdscr.getmaxyx()
+        min_height = 25
+        min_width = 142
+
+        if h < min_height or w < min_width:
+            size_prompt = curses.newwin(h, w, 0, 0)
+            size_prompt.clear()
+            message = "Terminal window is too small! Please increase the window size."
+            y = h // 2
+            x = (w - len(message)) // 2
+            size_prompt.addstr(y, x, message, curses.A_BOLD)
+            size_prompt.refresh()
+            size_prompt.getch()  # Wait for user input
+            return False
+        return True
+
     def run(self):
-        curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
-        self.draw_board()
         while True:
-            key = self.stdscr.getch()
-            if key == 27:  # ESC key
-                if self.exit_prompt:
+            if not self.check_window_size():
+                continue
+
+            curses.mousemask(curses.ALL_MOUSE_EVENTS | curses.REPORT_MOUSE_POSITION)
+            self.draw_board()
+            while True:
+                if not self.check_window_size():
+                    break
+
+                key = self.stdscr.getch()
+                if key == 27:  # ESC key
+                    if self.exit_prompt:
+                        curses.endwin()
+                        return
+                    else:
+                        self.exit_prompt = True
+                        self.draw_board()
+                elif key == ord('n') and self.game_won:
+                    self.__init__(self.stdscr, self.size)
+                    self.run()
+                elif key == ord('q') and self.game_won:
+                    curses.endwin()
+                    break
+                elif key == curses.KEY_MOUSE and not self.game_won:
+                    _, mx, my, _, button_state = curses.getmouse()
+                    h, w = self.stdscr.getmaxyx()
+                    start_x = (w - (self.size * 4 + 1)) // 2
+                    start_y = (h - (self.size * 2 + 1)) // 2
+                    if start_y <= my < start_y + self.size * 2 and start_x <= mx < start_x + self.size * 4:
+                        cell_x = (mx - start_x) // 4
+                        cell_y = (my - start_y) // 2
+                        if button_state & curses.BUTTON1_CLICKED and (button_state & curses.BUTTON_CTRL):  # Ctrl + Left click
+                            if self.covered[cell_y][cell_x]:
+                                if self.flagged[cell_y][cell_x]:
+                                    self.flagged[cell_y][cell_x] = False
+                                    self.questioned[cell_y][cell_x] = True
+                                elif self.questioned[cell_y][cell_x]:
+                                    self.questioned[cell_y][cell_x] = False
+                                else:
+                                    self.flagged[cell_y][cell_x] = True
+                                self.draw_board()
+                        elif self.covered[cell_y][cell_x]:
+                            self.covered[cell_y][cell_x] = False
+                            self.move_count += 1  # Increment move counter
+                            if self.board[cell_y][cell_x] == '✱':
+                                revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
+                                total_cells = self.size * self.size
+                                base_penalty = 1000
+                                penalty = base_penalty * (1 + revealed_cells / total_cells)
+                                self.score -= int(penalty)  # Dynamic penalty for revealing a mine
+                                for word in self.selected_words:
+                                    self.word_reveal_status[word] = []  # Reset word reveal status for all words
+                                self.current_word = None  # Reset current word
+                            else:
+                                self.last_revealed = (cell_y, cell_x)
+                                # Check if the revealed cell is part of a selected word
+                                is_part_of_word = False
+                                for word in self.selected_words:
+                                    if self.board[cell_y][cell_x] in word:
+                                        is_part_of_word = True
+                                        if self.current_word is None:
+                                            self.current_word = word
+                                        if self.current_word == word:
+                                            self.word_reveal_status[word].append((cell_y, cell_x))
+                                if not is_part_of_word:
+                                    self.random_click_counter += 1
+                                    words_left = len(self.selected_words) - len(self.revealed_words)
+                                    if words_left == 3 and self.random_click_counter > 10:
+                                        self.score -= 1000  # Penalty for random clicks
+                                    elif words_left == 2 and self.random_click_counter > 8:
+                                        self.score -= 1500  # Penalty for random clicks
+                                    elif words_left == 1 and self.random_click_counter > 6:
+                                        self.score -= 2000  # Penalty for random clicks
+                                self.check_revealed_words()  # This will now only score for full word reveals
+                            self.draw_board()
+                            if self.check_all_words_revealed():
+                                self.game_won = True
+                                self.draw_board()
+                elif key == ord('q') and self.game_won:
                     curses.endwin()
                     break
                 else:
-                    self.exit_prompt = True
-                    self.draw_board()
-            elif key == curses.KEY_MOUSE and not self.game_won:
-                _, mx, my, _, button_state = curses.getmouse()
-                h, w = self.stdscr.getmaxyx()
-                start_x = (w - (self.size * 4 + 1)) // 2
-                start_y = (h - (self.size * 2 + 1)) // 2
-                if start_y <= my < start_y + self.size * 2 and start_x <= mx < start_x + self.size * 4:
-                    cell_x = (mx - start_x) // 4
-                    cell_y = (my - start_y) // 2
-                    if button_state & curses.BUTTON1_CLICKED and (button_state & curses.BUTTON_CTRL):  # Ctrl + Left click
-                        if self.covered[cell_y][cell_x]:
-                            if self.flagged[cell_y][cell_x]:
-                                self.flagged[cell_y][cell_x] = False
-                                self.questioned[cell_y][cell_x] = True
-                            elif self.questioned[cell_y][cell_x]:
-                                self.questioned[cell_y][cell_x] = False
-                            else:
-                                self.flagged[cell_y][cell_x] = True
-                            self.draw_board()
-                    elif self.covered[cell_y][cell_x]:
-                        self.covered[cell_y][cell_x] = False
-                        self.move_count += 1  # Increment move counter
-                        if self.board[cell_y][cell_x] == '✱':
-                            revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
-                            total_cells = self.size * self.size
-                            base_penalty = 1000
-                            penalty = base_penalty * (1.7 + revealed_cells / total_cells)
-                            self.score -= int(penalty)  # Dynamic penalty for revealing a mine
-                            for word in self.selected_words:
-                                self.word_reveal_status[word] = []  # Reset word reveal status for all words
-                            self.current_word = None  # Reset current word
-                        else:
-                            self.last_revealed = (cell_y, cell_x)
-                            # Check if the revealed cell is part of a selected word
-                            is_part_of_word = False
-                            for word in self.selected_words:
-                                if self.board[cell_y][cell_x] in word:
-                                    is_part_of_word = True
-                                    if self.current_word is None:
-                                        self.current_word = word
-                                    if self.current_word == word:
-                                        self.word_reveal_status[word].append((cell_y, cell_x))
-                            if not is_part_of_word:
-                                self.random_click_counter += 1
-                                words_left = len(self.selected_words) - len(self.revealed_words)
-                                if words_left == 3 and self.random_click_counter > 10:
-                                    self.score -= 1000  # Penalty for random clicks
-                                elif words_left == 2 and self.random_click_counter > 9:
-                                    self.score -= 1500  # Penalty for random clicks
-                                elif words_left == 1 and self.random_click_counter > 7:
-                                    self.score -= 2000  # Penalty for random clicks
-                            self.check_revealed_words()  # This will now only score for full word reveals
-                        self.draw_board()
-                        if self.check_all_words_revealed():
-                            self.game_won = True
-                            self.draw_board()
-            elif key == ord('n') and self.game_won:
-                self.__init__(self.stdscr, self.size)
-                self.run()
-            elif key == ord('q') and self.game_won:
-                curses.endwin()
-                break
-            elif key == curses.KEY_MOUSE:
-                _, mx, my, _, button_state = curses.getmouse()
-                h, w = self.stdscr.getmaxyx()
-                if my == h - 2 and w - 12 <= mx < w - 5:
-                    if self.menu_button_clicked:
-                        curses.endwin()
-                        break
-                    else:
-                        self.menu_button_clicked = True
-                        self.draw_board()
-                else:
-                    self.menu_button_clicked = False
                     self.exit_prompt = False
                     self.draw_board()
-            else:
-                self.menu_button_clicked = False
-                self.exit_prompt = False
-                self.draw_board()
 
 if __name__ == "__main__":
     curses.wrapper(Board)
