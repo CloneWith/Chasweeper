@@ -2,7 +2,9 @@ import curses
 import os
 import re
 from util import diffcalc
-from game.classicEasy import Board
+from game.classicEasy import Board as EasyBoard
+from game.classicHard import Board as HardBoard
+from game.classicExpert import Board as ExpertBoard
 from util.user import User
 from util.user_statistics import UserStatistics
 
@@ -18,7 +20,6 @@ class Menu:
             "main": ["Start Game", "View Statistics", "Exit Game"],
             "start_game": [],
             "user_menu": ["Start Game", "View Statistics", "Logout", "Exit Game"],
-            "mode_selection": ["Classic Mode", "Timed Mode", "Back"],
             "classic_mode": ["Easy", "Hard", "Expert", "Back"]
         }
         self.descriptions = {
@@ -26,7 +27,6 @@ class Menu:
             "View Statistics": "* Check data and statistics",
             "Exit Game": "* Exit the game",
             "Classic Mode": "* Play the classic mode",
-            "Timed Mode": "* Play the timed mode",
             "Back": "* Go back to the previous menu",
             "Easy": "* Easy difficulty",
             "Hard": "* Hard difficulty",
@@ -122,7 +122,7 @@ class Menu:
             self.register()
         elif self.current_menu == "user_menu":
             if menu[self.current_row] == "Start Game":
-                self.current_menu = "mode_selection"
+                self.current_menu = "classic_mode"
                 self.current_row = 0
             elif menu[self.current_row] == "View Statistics":
                 self.view_statistics()
@@ -132,15 +132,6 @@ class Menu:
                 self.current_row = 0
             elif menu[self.current_row] == "Exit Game":
                 exit()
-        elif self.current_menu == "mode_selection":
-            if menu[self.current_row] == "Classic Mode":
-                self.current_menu = "classic_mode"
-                self.current_row = 0
-            elif menu[self.current_row] == "Timed Mode":
-                self.start_timed_mode()
-            elif menu[self.current_row] == "Back":
-                self.current_menu = "user_menu"
-                self.current_row = 0
         elif self.current_menu == "classic_mode":
             if menu[self.current_row] == "Easy":
                 self.start_game_with_difficulty("Easy")
@@ -149,7 +140,7 @@ class Menu:
             elif menu[self.current_row] == "Expert":
                 self.start_game_with_difficulty("Expert")
             elif menu[self.current_row] == "Back":
-                self.current_menu = "mode_selection"
+                self.current_menu = "user_menu"
                 self.current_row = 0
 
     def start_game(self):
@@ -160,13 +151,17 @@ class Menu:
                 self.menus["start_game"] = [user.user_id for user in self.users] + ["New player? Click here to register!"]
             self.current_menu = "start_game"
         else:
-            self.current_menu = "mode_selection"
+            self.current_menu = "classic_mode"
         self.current_row = 0
 
     def start_game_with_difficulty(self, difficulty):
-        # Currently only Classic mode - Easy is implemented
-        # difficulty parameter is currently not used
-        board = Board(self.stdscr, self.current_user)
+        if difficulty == "Easy":
+            board = EasyBoard(self.stdscr, self.current_user, size=7)
+        elif difficulty == "Hard":
+            board = HardBoard(self.stdscr, self.current_user, size=10)
+        elif difficulty == "Expert":
+            # Assuming Expert mode uses HardBoard with a larger size
+            board = ExpertBoard(self.stdscr, self.current_user, size=12)
         board.run()
 
     def register(self):
@@ -251,12 +246,6 @@ class Menu:
                     self.current_row = 0
                 elif self.current_menu == "user_menu":
                     self.current_menu = "main"
-                    self.current_row = 0
-                elif self.current_menu == "mode_selection":
-                    self.current_menu = "user_menu"
-                    self.current_row = 0
-                elif self.current_menu == "classic_mode":
-                    self.current_menu = "mode_selection"
                     self.current_row = 0
             elif key == curses.KEY_MOUSE:
                 _, mx, my, _, _ = curses.getmouse()

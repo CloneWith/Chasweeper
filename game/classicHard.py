@@ -4,7 +4,7 @@ import random
 import os
 
 class Board:
-    def __init__(self, stdscr, user, size=7):
+    def __init__(self, stdscr, user, size=9):
         self.stdscr = stdscr
         self.user = user
         self.size = size
@@ -109,8 +109,8 @@ class Board:
         # Filter out words longer than the board size
         valid_words = [word for word in self.words if len(word) <= self.size]
 
-        # Randomly select 3 words to place on the board
-        self.selected_words = random.sample(valid_words, 3)
+        # Randomly select 5 words to place on the board
+        self.selected_words = random.sample(valid_words, 5)
 
         # Initialize the reveal status for each selected word
         for word in self.selected_words:
@@ -145,7 +145,7 @@ class Board:
         # Randomly fill some of the remaining empty cells with common letters
         for i in range(self.size):
             for j in range(self.size):
-                if self.board[i][j] == ' ' and random.random() < 0.15:  # Chance to fill the cell
+                if self.board[i][j] == ' ' and random.random() < 0.16:  # Chance to fill the cell
                                                                         # Reduce this value to increase the number of empty cells
                     # Avoid using letters that are already placed in words
                     available_letters = [letter for letter in self.common_letters if letter not in placed_letters]
@@ -158,7 +158,7 @@ class Board:
         random.shuffle(possible_positions)
 
         # Ensure there are enough positions to place mines
-        num_mines = 6
+        num_mines = 9
         if len(possible_positions) < num_mines:
             num_mines = len(possible_positions)
 
@@ -355,6 +355,7 @@ class Board:
         games_played = self.user_stats.get('games_played', 1)
         win_rate = (self.user_stats.get('games_won', 0) / games_played * 100) if games_played > 0 else 0
         user_info_win.addstr(5, 12, f"{win_rate:.2f}%", curses.A_BOLD)
+        user_info_win.addstr(5, 12, f"{self.user_stats.get('games_won', 0) / self.user_stats.get('games_played', 1) * 100:.2f}%", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
@@ -375,6 +376,13 @@ class Board:
                 hint = " ".join("_" * len(word))
                 self.stdscr.addstr(hint_start_y + idx + 1, 2, hint)
 
+        # Draw move counter below the hint section
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 2, 2, "Moves: ")
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 2, 9, f"{self.move_count}", curses.A_BOLD)
+
+        # Draw score below the move counter
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 3, 2, "Score: ")
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 3, 9, f"{self.score}", curses.A_BOLD)
         # Display mine stepped counter
         self.stdscr.addstr(hint_start_y + len(self.selected_words) + 5, 2, "Mine stepped:")
         mine_display = ""
@@ -494,32 +502,42 @@ class Board:
                                 self.adjust_random_click_cap()
                                 self.award_bonus_points()
 
+    def adjust_random_click_cap(self):
+        words_left = len(self.selected_words) - len(self.revealed_words)
+        if words_left == 5:
+            self.random_click_cap = 17  # Stage 1 cap for random clicks
+        elif words_left == 4:
+            self.random_click_cap = 15  # Stage 2 cap for random clicks
+            self.random_click_counter = max(0, self.random_click_counter - 8)
+        elif words_left == 3:
+            self.random_click_cap = 12  # Stage 3 cap for random clicks
+            self.random_click_counter = max(0, self.random_click_counter - 7)
+        elif words_left == 2:
+            self.random_click_cap = 11  # yeah this is for stage 4
+            self.random_click_counter = max(0, self.random_click_counter - 6)
+        elif words_left == 1:
+            self.random_click_cap = 9  # same here
+            self.random_click_counter = max(0, self.random_click_counter - 4)
+
+    def award_bonus_points(self):
+        words_left = len(self.selected_words) - len(self.revealed_words)
+        if words_left == 5 and self.random_click_counter <= self.random_click_cap:
+            self.score += 1000 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 1 bonus points
+        elif words_left == 4 and self.random_click_counter <= self.random_click_cap:
+            self.score += 850 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 2 bonus points
+        elif words_left == 3 and self.random_click_counter <= self.random_click_cap:
+            self.score += 700 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 3 bonus points
+        elif words_left == 2 and self.random_click_counter <= self.random_click_cap:
+            self.score += 650 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 4 bonus points
+        elif words_left == 1 and self.random_click_counter <= self.random_click_cap:
+            self.score += 500 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 5 bonus points
+
     def check_if_mine_stepped_lost(self):
         if self.mine_stepped_counter == 3:
             self.game_lose = True
             self.mine_lose = True
             self.game_won = False
             return True
-
-    def adjust_random_click_cap(self):
-        words_left = len(self.selected_words) - len(self.revealed_words)
-        if words_left == 3:
-            self.random_click_cap = 10  # Stage 1 cap for random clicks
-        elif words_left == 2:
-            self.random_click_cap = 9  # Reduce Stage 2 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 5)
-        elif words_left == 1:
-            self.random_click_cap = 7  # Stage 3 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 3)
-
-    def award_bonus_points(self):
-        words_left = len(self.selected_words) - len(self.revealed_words)
-        if words_left == 3 and self.random_click_counter <= self.random_click_cap:
-            self.score += 800 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 1 bonus points
-        elif words_left == 2 and self.random_click_counter <= self.random_click_cap:
-            self.score += 1200 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 2 bonus points
-        elif words_left == 1 and self.random_click_counter <= self.random_click_cap:
-            self.score += 1700 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 3 bonus points
 
     def penalty_multiplier(self, random_click_counter, cap_value):
         k = 0.01
@@ -653,7 +671,7 @@ class Board:
                                 self.mine_stepped_counter += 1
                                 revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
                                 total_cells = self.size * self.size
-                                base_penalty = 1000
+                                base_penalty = 1300
                                 k = (220 - total_cells) / 3000
                                 penalty = int((math.exp(k * (revealed_cells - 5)) - total_cells / 900) * base_penalty)
                                 self.score -= int(penalty)  # Dynamic penalty for revealing a mine
@@ -674,12 +692,16 @@ class Board:
                                 if (not is_part_of_word) or (is_part_of_word and self.random_click_counter == 0):
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
-                                    if words_left == 3:
-                                        self.base_penalty_random = 700  # Penalty for random clicks
-                                    elif words_left == 2:
+                                    if words_left == 5:
+                                        self.base_penalty_random = 400
+                                    elif words_left == 4:
+                                        self.base_penalty_random = 800
+                                    elif words_left == 3:
                                         self.base_penalty_random = 1100  # Penalty for random clicks
-                                    elif words_left == 1:
+                                    elif words_left == 2:
                                         self.base_penalty_random = 1500  # Penalty for random clicks
+                                    elif words_left == 1:
+                                        self.base_penalty_random = 1700  # Penalty for random clicks
                                     else:
                                         self.base_penalty_random = 0
                                     
