@@ -106,7 +106,7 @@ class Board:
         # Filter out words longer than the board size
         valid_words = [word for word in self.words if len(word) <= self.size]
 
-        # Randomly select 5 words to place on the board
+        # Randomly select 7 words to place on the board
         self.selected_words = random.sample(valid_words, 7)
 
         # Initialize the reveal status for each selected word

@@ -4,6 +4,7 @@ import re
 from util import diffcalc
 from game.classicEasy import Board as EasyBoard
 from game.classicHard import Board as HardBoard
+from game.classicExpert import Board as ExpertBoard
 from util.user import User
 from util.user_statistics import UserStatistics
 
@@ -171,7 +172,7 @@ class Menu:
             board = HardBoard(self.stdscr, self.current_user, size=10)
         elif difficulty == "Expert":
             # Assuming Expert mode uses HardBoard with a larger size
-            board = HardBoard(self.stdscr, self.current_user, size=12)
+            board = ExpertBoard(self.stdscr, self.current_user, size=12)
         board.run()
 
     def register(self):
