@@ -2,7 +2,8 @@ import curses
 import os
 import re
 from util import diffcalc
-from game.classicEasy import Board
+from game.classicEasy import Board as EasyBoard
+from game.classicHard import Board as HardBoard
 from util.user import User
 from util.user_statistics import UserStatistics
 
@@ -164,9 +165,13 @@ class Menu:
         self.current_row = 0
 
     def start_game_with_difficulty(self, difficulty):
-        # Currently only Classic mode - Easy is implemented
-        # difficulty parameter is currently not used
-        board = Board(self.stdscr, self.current_user)
+        if difficulty == "Easy":
+            board = EasyBoard(self.stdscr, self.current_user, size=7)
+        elif difficulty == "Hard":
+            board = HardBoard(self.stdscr, self.current_user, size=10)
+        elif difficulty == "Expert":
+            # Assuming Expert mode uses HardBoard with a larger size
+            board = HardBoard(self.stdscr, self.current_user, size=12)
         board.run()
 
     def register(self):
