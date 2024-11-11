@@ -23,12 +23,14 @@ class Board:
         self.exit_prompt = False
         self.game_won = False
         self.game_lose = False
+        self.mine_lose = False
         self.move_count = 0  # Initialize move counter
         self.last_revealed = None  # Track the last revealed cell
         self.current_word = None  # Track the current word being revealed
         self.score = 0  # Initialize score
         self.base_penalty_random = 0
         self.random_click_counter = 0
+        self.mine_stepped_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
 
@@ -373,6 +375,16 @@ class Board:
                 hint = " ".join("_" * len(word))
                 self.stdscr.addstr(hint_start_y + idx + 1, 2, hint)
 
+        # Display mine stepped counter
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 5, 2, "Mine stepped:")
+        mine_display = ""
+        for i in range(3):
+            if i < self.mine_stepped_counter:
+                mine_display += "✱ "
+            else:
+                mine_display += "_ "
+        self.stdscr.addstr(hint_start_y + len(self.selected_words) + 6, 2, mine_display.strip())
+
         # Draw move counter below the hint section
         self.stdscr.addstr(hint_start_y + len(self.selected_words) + 2, 2, f"Moves: {self.move_count}")
 
@@ -428,10 +440,16 @@ class Board:
             self.stdscr.addstr(win_msg_y + 3, w - 30, "Press N for New Game")
 
         # Draw the losing message if the game is lost
-        if self.game_lose:
+        if self.game_lose and not self.mine_lose:
             lose_msg_y = h // 2 - 2
             self.stdscr.addstr(lose_msg_y, w - 40, "Game Over!")
             self.stdscr.addstr(lose_msg_y + 1, w - 40, "Negative score? Better luck next time!")
+            self.stdscr.addstr(lose_msg_y + 3, w - 40, "Press N for New Game")
+
+        if self.mine_lose:
+            lose_msg_y = h // 2 - 2
+            self.stdscr.addstr(lose_msg_y, w - 40, "Game Over!")
+            self.stdscr.addstr(lose_msg_y + 1, w - 40, "Stepped on too many mines!")
             self.stdscr.addstr(lose_msg_y + 3, w - 40, "Press N for New Game")
 
         self.stdscr.refresh()
@@ -475,6 +493,13 @@ class Board:
                                 self.score += self.calculate_total_score(word, clean_reveal)
                                 self.adjust_random_click_cap()
                                 self.award_bonus_points()
+
+    def check_if_mine_stepped_lost(self):
+        if self.mine_stepped_counter == 3:
+            self.game_lose = True
+            self.mine_lose = True
+            self.game_won = False
+            return True
 
     def adjust_random_click_cap(self):
         words_left = len(self.selected_words) - len(self.revealed_words)
@@ -625,6 +650,7 @@ class Board:
                             self.covered[cell_y][cell_x] = False
                             self.move_count += 1  # Increment move counter
                             if self.board[cell_y][cell_x] == '✱':
+                                self.mine_stepped_counter += 1
                                 revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
                                 total_cells = self.size * self.size
                                 base_penalty = 1000
@@ -667,6 +693,9 @@ class Board:
                                 self.game_won = True
                                 self.update_stats(self.game_won, self.game_lose)
                                 self.draw_board()
+                if self.check_if_mine_stepped_lost() and not self.game_won:
+                    self.draw_board()
+                    self.stdscr.refresh()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
                     break
