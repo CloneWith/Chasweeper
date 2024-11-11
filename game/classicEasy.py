@@ -1,4 +1,5 @@
 import curses
+import math
 import random
 import os
 
@@ -25,6 +26,7 @@ class Board:
         self.last_revealed = None  # Track the last revealed cell
         self.current_word = None  # Track the current word being revealed
         self.score = 0  # Initialize score
+        self.base_penalty_random = 0
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
@@ -342,8 +344,12 @@ class Board:
         user_info_win.border('|', '|', '-', '-', '+', '+', '+', '+')
         user_info_win.addstr(1, 2, f"Player: ")
         user_info_win.addstr(1, 12, f"{self.user.user_id}", curses.A_BOLD)
-        user_info_win.addstr(2, 2, f"Highest Score: ")
-        user_info_win.addstr(2, 17, f"{self.user_stats.get('highest_score_classic', 'N/A')}", curses.A_BOLD)
+        user_info_win.addstr(3, 2, f"Highest Score: ")
+        user_info_win.addstr(3, 17, f"{self.user_stats.get('highest_score_classic', 'N/A')}", curses.A_BOLD)
+        user_info_win.addstr(4, 2, f"Games Won: ")
+        user_info_win.addstr(4, 13, f"{self.user_stats.get('games_won', 0)}", curses.A_BOLD)
+        user_info_win.addstr(5, 2, f"Win rate: ")
+        user_info_win.addstr(5, 12, f"{self.user_stats.get('games_won', 0) / self.user_stats.get('games_played', 1) * 100:.2f}%", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
@@ -466,19 +472,30 @@ class Board:
             self.random_click_cap = 10  # Stage 1 cap for random clicks
         elif words_left == 2:
             self.random_click_cap = 9  # Reduce Stage 2 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 2)
+            self.random_click_counter = max(0, self.random_click_counter - 5)
         elif words_left == 1:
             self.random_click_cap = 7  # Stage 3 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 1)
+            self.random_click_counter = max(0, self.random_click_counter - 3)
 
     def award_bonus_points(self):
         words_left = len(self.selected_words) - len(self.revealed_words)
-        if words_left == 3 and self.random_click_counter <= 10:
-            self.score += 2000  # Stage 1 bonus points
-        elif words_left == 2 and self.random_click_counter <= 8:
-            self.score += 1500  # Stage 2 bonus points
-        elif words_left == 1 and self.random_click_counter <= 6:
-            self.score += 1000  # Stage 3 bonus points
+        if words_left == 3 and self.random_click_counter <= self.random_click_cap:
+            self.score += 800 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 1 bonus points
+        elif words_left == 2 and self.random_click_counter <= self.random_click_cap:
+            self.score += 1200 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 2 bonus points
+        elif words_left == 1 and self.random_click_counter <= self.random_click_cap:
+            self.score += 1700 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 3 bonus points
+
+    def penalty_multiplier(self, random_click_counter, cap_value):
+        k = 0.01
+        
+        if random_click_counter <= (cap_value - 2):
+            return (math.exp(k * (random_click_counter - cap_value)) - 0.6)
+        elif (cap_value - 2) < random_click_counter <= cap_value:
+            return (random_click_counter - (cap_value - 2)) / 2
+        else:
+            return math.exp(k * (random_click_counter - cap_value))
+
 
     def get_word_cells(self, word):
         cells = []
@@ -587,7 +604,8 @@ class Board:
                                 revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
                                 total_cells = self.size * self.size
                                 base_penalty = 1000
-                                penalty = base_penalty * (1 + revealed_cells / total_cells)
+                                k = (220 - total_cells) / 3000
+                                penalty = int((math.exp(k * (revealed_cells - 5)) - total_cells / 900) * base_penalty)
                                 self.score -= int(penalty)  # Dynamic penalty for revealing a mine
                                 for word in self.selected_words:
                                     self.word_reveal_status[word] = []  # Reset word reveal status for all words
@@ -603,15 +621,22 @@ class Board:
                                             self.current_word = word
                                         if self.current_word == word:
                                             self.word_reveal_status[word].append((cell_y, cell_x))
-                                if not is_part_of_word:
+                                if (not is_part_of_word) or (is_part_of_word and self.random_click_counter == 0):
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
-                                    if words_left == 3 and self.random_click_counter > 10:
-                                        self.score -= 1000  # Penalty for random clicks
-                                    elif words_left == 2 and self.random_click_counter > 8:
-                                        self.score -= 1500  # Penalty for random clicks
-                                    elif words_left == 1 and self.random_click_counter > 6:
-                                        self.score -= 2000  # Penalty for random clicks
+                                    if words_left == 3:
+                                        self.base_penalty_random = 700  # Penalty for random clicks
+                                    elif words_left == 2:
+                                        self.base_penalty_random = 1100  # Penalty for random clicks
+                                    elif words_left == 1:
+                                        self.base_penalty_random = 1500  # Penalty for random clicks
+                                    else:
+                                        self.base_penalty_random = 0
+                                    
+                                if self.random_click_cap is not None:
+                                    penalty_multiplier_value = self.penalty_multiplier(self.random_click_counter, self.random_click_cap)
+                                    penalty_random = int(self.base_penalty_random * penalty_multiplier_value)
+                                    self.score -= penalty_random
                                 self.check_revealed_words()  # This will now only score for full word reveals
                             self.draw_board()
                             if self.check_all_words_revealed():
