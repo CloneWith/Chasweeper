@@ -1,6 +1,6 @@
 import curses
 import os
-from user import User
+from util.user import User
 
 class UserStatistics:
     def __init__(self, stdscr):
