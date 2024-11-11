@@ -22,6 +22,7 @@ class Board:
         self.fill_board()
         self.exit_prompt = False
         self.game_won = False
+        self.game_lose = False
         self.move_count = 0  # Initialize move counter
         self.last_revealed = None  # Track the last revealed cell
         self.current_word = None  # Track the current word being revealed
@@ -420,11 +421,18 @@ class Board:
             self.stdscr.addstr(h - 2, w - 50, "* Press 'esc' to quit")
 
         # Draw the winning message if the game is won
-        if self.game_won:
+        if self.game_won and not self.game_lose:
             win_msg_y = h // 2 - 2
             self.stdscr.addstr(win_msg_y, w - 30, "Congratulations!")
             self.stdscr.addstr(win_msg_y + 1, w - 30, "You found all the words!")
             self.stdscr.addstr(win_msg_y + 3, w - 30, "Press N for New Game")
+
+        # Draw the losing message if the game is lost
+        if self.game_lose:
+            lose_msg_y = h // 2 - 2
+            self.stdscr.addstr(lose_msg_y, w - 40, "Game Over!")
+            self.stdscr.addstr(lose_msg_y + 1, w - 40, "Negative score? Better luck next time!")
+            self.stdscr.addstr(lose_msg_y + 3, w - 40, "Press N for New Game")
 
         self.stdscr.refresh()
 
@@ -526,7 +534,16 @@ class Board:
         return True
 
     def check_all_words_revealed(self):
-        return all(word in self.revealed_words for word in self.selected_words)
+        all_revealed = all(word in self.revealed_words for word in self.selected_words)
+        if all_revealed and self.score < 0:
+            self.game_won = False
+            self.game_lose = True
+            return True
+        elif all_revealed:
+            self.game_won = True
+            self.game_lose = False
+            return True
+        return False
 
     def check_window_size(self):
         h, w = self.stdscr.getmaxyx()
@@ -545,9 +562,9 @@ class Board:
             return False
         return True
 
-    def update_stats(self, game_won):
+    def update_stats(self, game_won, game_lose):
         self.user_stats['games_played'] += 1
-        if game_won:
+        if game_won and not game_lose:
             self.user_stats['games_won'] += 1
         if self.score > self.user_stats['highest_score_classic']:
             self.user_stats['highest_score_classic'] = self.score
@@ -569,16 +586,21 @@ class Board:
                 if key == 27:  # ESC key
                     if self.exit_prompt:
                         if not self.game_won:
-                            self.update_stats(self.game_won)
+                            self.update_stats(self.game_won, self.game_lose)
                         curses.endwin()
                         return
                     else:
                         self.exit_prompt = True
                         self.draw_board()
+                elif key == ord('n') and self.game_lose:
+                    self.__init__(self.stdscr, self.user, self.size)
+                    self.run()
                 elif key == ord('n') and self.game_won:
                     self.__init__(self.stdscr, self.user, self.size)
                     self.run()
-                elif self.check_all_words_revealed():
+                elif self.game_lose and not self.game_won:
+                    self.stdscr.refresh()
+                elif self.check_all_words_revealed() and not self.game_lose:
                     self.game_won = True
                     self.stdscr.refresh()
                 elif key == curses.KEY_MOUSE and not self.game_won:
@@ -643,7 +665,7 @@ class Board:
                             self.draw_board()
                             if self.check_all_words_revealed():
                                 self.game_won = True
-                                self.update_stats(self.game_won)
+                                self.update_stats(self.game_won, self.game_lose)
                                 self.draw_board()
                 elif key == ord('q') and self.game_won:
                     curses.endwin()
