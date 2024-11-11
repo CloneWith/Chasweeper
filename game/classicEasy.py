@@ -349,7 +349,9 @@ class Board:
         user_info_win.addstr(4, 2, f"Games Won: ")
         user_info_win.addstr(4, 13, f"{self.user_stats.get('games_won', 0)}", curses.A_BOLD)
         user_info_win.addstr(5, 2, f"Win rate: ")
-        user_info_win.addstr(5, 12, f"{self.user_stats.get('games_won', 0) / self.user_stats.get('games_played', 1) * 100:.2f}%", curses.A_BOLD)
+        games_played = self.user_stats.get('games_played', 1)
+        win_rate = (self.user_stats.get('games_won', 0) / games_played * 100) if games_played > 0 else 0
+        user_info_win.addstr(5, 12, f"{win_rate:.2f}%", curses.A_BOLD)
         user_info_win.refresh()
 
     def draw_board(self):
