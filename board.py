@@ -467,10 +467,10 @@ class Board:
             self.random_click_cap = 10  # Stage 1 cap for random clicks
         elif words_left == 2:
             self.random_click_cap = 9  # Reduce Stage 2 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 2)
+            self.random_click_counter = max(0, self.random_click_counter - 5)
         elif words_left == 1:
             self.random_click_cap = 7  # Stage 3 cap for random clicks
-            self.random_click_counter = max(0, self.random_click_counter - 1)
+            self.random_click_counter = max(0, self.random_click_counter - 3)
 
     def award_bonus_points(self):
         words_left = len(self.selected_words) - len(self.revealed_words)
@@ -480,6 +480,17 @@ class Board:
             self.score += 1500  # Stage 2 bonus points
         elif words_left == 1 and self.random_click_counter <= 6:
             self.score += 1000  # Stage 3 bonus points
+
+    def penalty_multiplier(self, random_click_counter, cap_value):
+        k = 0.01
+        
+        if random_click_counter <= (cap_value - 2):
+            return (math.exp(k * (random_click_counter - cap_value)) - 0.6)
+        elif (cap_value - 2) < random_click_counter <= cap_value:
+            return (random_click_counter - (cap_value - 2)) / 2
+        else:
+            return math.exp(k * (random_click_counter - cap_value))
+
 
     def get_word_cells(self, word):
         cells = []
@@ -608,12 +619,19 @@ class Board:
                                 if not is_part_of_word:
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
-                                    if words_left == 3 and self.random_click_counter > 10:
-                                        self.score -= 1000  # Penalty for random clicks
-                                    elif words_left == 2 and self.random_click_counter > 9:
-                                        self.score -= 1500  # Penalty for random clicks
-                                    elif words_left == 1 and self.random_click_counter > 7:
-                                        self.score -= 2000  # Penalty for random clicks
+                                    if words_left == 3:
+                                        base_penalty_random = 1000  # Penalty for random clicks
+                                    elif words_left == 2:
+                                        base_penalty_random = 1500  # Penalty for random clicks
+                                    elif words_left == 1:
+                                        base_penalty_random = 2000  # Penalty for random clicks
+                                    else:
+                                        base_penalty_random = 0
+                                    
+                                    if self.random_click_cap is not None:
+                                        penalty_multiplier_value = self.penalty_multiplier(self.random_click_counter, self.random_click_cap)
+                                        penalty_random = int(base_penalty_random * penalty_multiplier_value)
+                                        self.score -= penalty_random
                                 self.check_revealed_words()  # This will now only score for full word reveals
                             self.draw_board()
                             if self.check_all_words_revealed():
