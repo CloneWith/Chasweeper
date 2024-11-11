@@ -475,12 +475,12 @@ class Board:
 
     def award_bonus_points(self):
         words_left = len(self.selected_words) - len(self.revealed_words)
-        if words_left == 3 and self.random_click_counter <= 10:
-            self.score += 2000  # Stage 1 bonus points
-        elif words_left == 2 and self.random_click_counter <= 8:
-            self.score += 1500  # Stage 2 bonus points
-        elif words_left == 1 and self.random_click_counter <= 6:
-            self.score += 1000  # Stage 3 bonus points
+        if words_left == 3 and self.random_click_counter <= self.random_click_cap:
+            self.score += 800 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 1 bonus points
+        elif words_left == 2 and self.random_click_counter <= self.random_click_cap:
+            self.score += 1200 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 2 bonus points
+        elif words_left == 1 and self.random_click_counter <= self.random_click_cap:
+            self.score += 1700 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 3 bonus points
 
     def penalty_multiplier(self, random_click_counter, cap_value):
         k = 0.01
@@ -621,11 +621,11 @@ class Board:
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
                                     if words_left == 3:
-                                        self.base_penalty_random = 1000  # Penalty for random clicks
+                                        self.base_penalty_random = 700  # Penalty for random clicks
                                     elif words_left == 2:
-                                        self.base_penalty_random = 1500  # Penalty for random clicks
+                                        self.base_penalty_random = 1100  # Penalty for random clicks
                                     elif words_left == 1:
-                                        self.base_penalty_random = 2000  # Penalty for random clicks
+                                        self.base_penalty_random = 1500  # Penalty for random clicks
                                     else:
                                         self.base_penalty_random = 0
                                     
