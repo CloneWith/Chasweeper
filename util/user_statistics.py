@@ -1,6 +1,6 @@
 import curses
 import os
-from user import User
+from util.user import User
 
 class UserStatistics:
     def __init__(self, stdscr):
@@ -10,8 +10,8 @@ class UserStatistics:
 
     def load_users(self):
         users = []
-        if os.path.exists('./data/user.txt'):
-            with open('./data/user.txt', 'r') as file:
+        if os.path.exists('../data/user.txt'):
+            with open('../data/user.txt', 'r') as file:
                 for line in file:
                     data = line.strip().split(',')
                     if len(data) == 11:  # Ensure the correct number of fields

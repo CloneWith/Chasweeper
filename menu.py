@@ -1,10 +1,10 @@
 import curses
 import os
 import re
-import diffcalc
+from util import diffcalc
 from game.classicEasy import Board
-from user import User
-from user_statistics import UserStatistics
+from util.user import User
+from util.user_statistics import UserStatistics
 
 
 class Menu:
