@@ -1,9 +1,11 @@
 import curses
 import os
 import re
+import diffcalc
 from board import Board
 from user import User
 from user_statistics import UserStatistics
+
 
 class Menu:
     def __init__(self, stdscr):
@@ -102,6 +104,7 @@ class Menu:
         menu = self.menus[self.current_menu]
         if self.current_menu == "main":
             if menu[self.current_row] == "Start Game":
+                diffcalc.update_words_file() # Calculate word complexity when starting the game
                 self.start_game()
             elif menu[self.current_row] == "View Statistics":
                 self.view_statistics()

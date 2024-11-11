@@ -530,6 +530,8 @@ class Board:
         self.user_stats['games_played'] += 1
         if game_won:
             self.user_stats['games_won'] += 1
+        if self.score > self.user_stats['highest_score_classic']:
+            self.user_stats['highest_score_classic'] = self.score
         self.save_user_stats()
 
     def run(self):
