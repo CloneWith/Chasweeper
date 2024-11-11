@@ -28,8 +28,6 @@ class Board:
         self.random_click_counter = 0
         self.random_click_cap = 5  # Initial cap for random clicks
         self.user_stats = self.load_user_stats()
-        self.words_revealed_counter = 0  # Initialize words revealed counter
-        self.longest_word_revealed = ""  # Initialize longest word revealed
 
     def load_words(self):
         words = []
@@ -530,9 +528,6 @@ class Board:
 
     def update_stats(self, game_won):
         self.user_stats['games_played'] += 1
-        self.user_stats['words_revealed'] += self.words_revealed_counter
-        if len(self.longest_word_revealed) > len(self.user_stats['longest_word_revealed']):
-            self.user_stats['longest_word_revealed'] = self.longest_word_revealed
         if game_won:
             self.user_stats['games_won'] += 1
         self.save_user_stats()
