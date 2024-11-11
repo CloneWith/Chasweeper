@@ -2,7 +2,7 @@ import curses
 import os
 import re
 import diffcalc
-from game.board import Board
+from game.classicEasy import Board
 from user import User
 from user_statistics import UserStatistics
 
