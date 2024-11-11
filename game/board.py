@@ -32,7 +32,7 @@ class Board:
     def load_words(self):
         words = []
         word_complexity = {}
-        with open('./data/words.txt', 'r') as file:
+        with open('../data/words.txt', 'r') as file:
             for line in file:
                 word, complexity = line.strip().split(',')
                 words.append(word)
@@ -41,8 +41,8 @@ class Board:
 
     def load_user_stats(self):
         user_stats = {}
-        if os.path.exists('./data/user.txt'):
-            with open('./data/user.txt', 'r') as file:
+        if os.path.exists('../data/user.txt'):
+            with open('../data/user.txt', 'r') as file:
                 for line in file:
                     data = line.strip().split(',')
                     if len(data) == 11 and data[0] == self.user.user_id:  # Ensure the correct number of fields and match user ID
@@ -62,10 +62,10 @@ class Board:
         return user_stats
 
     def save_user_stats(self):
-        if os.path.exists('./data/user.txt'):
-            with open('./data/user.txt', 'r') as file:
+        if os.path.exists('../data/user.txt'):
+            with open('../data/user.txt', 'r') as file:
                 lines = file.readlines()
-            with open('./data/user.txt', 'w') as file:
+            with open('../data/user.txt', 'w') as file:
                 for line in lines:
                     data = line.strip().split(',')
                     if len(data) == 11 and data[0] == self.user.user_id:
@@ -83,7 +83,7 @@ class Board:
                     else:
                         file.write(line)
         else:
-            with open('./data/user.txt', 'w') as file:
+            with open('../data/user.txt', 'w') as file:
                 file.write(f"{self.user.user_id},{self.user_stats['games_played']},{self.user_stats['games_won']},{self.user_stats['words_revealed']},{self.user_stats['longest_word_revealed']},{self.user_stats['mines_stepped']},{self.user_stats['highest_score_classic']},{self.user_stats['highest_score_timed']},{self.user_stats['average_steps_used']},{self.user_stats['min_steps_used']},{self.user_stats['max_steps_used']}\n")
 
     def fill_board(self):
