@@ -1,9 +1,120 @@
+# A module for the classic easy mode of The Puzzle Game.
+# This module contains the Board class, which represents the game board and handles the game logic, 
+# user input, and game state updates for the classic easy mode of The Puzzle Game.
+
 import curses
 import math
 import random
 import os
 
 class Board:
+
+    # A class to represent the game board for The Puzzle Game.
+    # Attributes:
+    # -----------
+    # stdscr : curses.window
+    #     The standard screen window for displaying the game.
+    # user : User
+    #     The user playing the game.
+    # size : int, optional
+    #     The size of the game board (default is 7).
+    # board : list of list of str
+    #     The game board matrix.
+    # covered : list of list of bool
+    #     Matrix indicating whether each cell is covered.
+    # mine_hints : list of list of str
+    #     Matrix containing hints for mines.
+    # letter_hints : list of list of str
+    #     Matrix containing hints for letters.
+    # flagged : list of list of bool
+    #     Matrix indicating whether each cell is flagged.
+    # questioned : list of list of bool
+    #     Matrix indicating whether each cell is questioned.
+    # words : list of str
+    #     List of words loaded from file.
+    # word_complexity : dict
+    #     Dictionary mapping words to their complexity.
+    # selected_words : list of str
+    #     List of words selected to be placed on the board.
+    # revealed_words : set
+    #     Set of words that have been revealed.
+    # word_reveal_status : dict
+    #     Dictionary tracking the reveal status of each word.
+    # common_letters : str
+    #     String of common letters used to fill the board.
+    # exit_prompt : bool
+    #     Flag indicating whether the exit prompt is displayed.
+    # game_won : bool
+    #     Flag indicating whether the game is won.
+    # game_lose : bool
+    #     Flag indicating whether the game is lost.
+    # mine_lose : bool
+    #     Flag indicating whether the game is lost due to stepping on mines.
+    # move_count : int
+    #     Counter for the number of moves made.
+    # last_revealed : tuple
+    #     Coordinates of the last revealed cell.
+    # current_word : str
+    #     The current word being revealed.
+    # score : int
+    #     The player's score.
+    # base_penalty_random : int
+    #     Base penalty for random clicks.
+    # random_click_counter : int
+    #     Counter for the number of random clicks.
+    # mine_stepped_counter : int
+    #     Counter for the number of mines stepped on.
+    # random_click_cap : int
+    #     Cap for the number of random clicks allowed.
+    # user_stats : dict
+    #     Dictionary containing the user's statistics.
+    # Methods:
+    # --------
+    # load_words():
+    #     Loads words and their complexity from a file.
+    # load_user_stats():
+    #     Loads user statistics from a file.
+    # save_user_stats():
+    #     Saves user statistics to a file.
+    # fill_board():
+    #     Fills the game board with words, mines, and hints.
+    # calculate_mine_hint(row, col):
+    #     Calculates the mine hint for a given cell.
+    # calculate_letter_hint(row, col):
+    #     Calculates the letter hint for a given cell.
+    # display_user_info():
+    #     Displays user information on the screen.
+    # draw_board():
+    #     Draws the game board on the screen.
+    # calculate_base_score(word):
+    #     Calculates the base score for a given word.
+    # calculate_clean_reveal_bonus(clean_reveal, word):
+    #     Calculates the bonus score for a clean reveal of a word.
+    # calculate_total_score(word, clean_reveal):
+    #     Calculates the total score for revealing a word.
+    # check_revealed_words():
+    #     Checks if any words have been fully revealed.
+    # check_if_mine_stepped_lost():
+    #     Checks if the game is lost due to stepping on too many mines.
+    # adjust_random_click_cap():
+    #     Adjusts the cap for the number of random clicks allowed.
+    # award_bonus_points():
+    #     Awards bonus points based on the number of words left and random clicks.
+    # penalty_multiplier(random_click_counter, cap_value):
+    #     Calculates the penalty multiplier for random clicks.
+    # get_word_cells(word):
+    #     Gets the coordinates of the cells containing a given word.
+    # check_word_revealed(row, col, word, direction):
+    #     Checks if a word is fully revealed starting from a given cell.
+    # check_all_words_revealed():
+    #     Checks if all selected words have been revealed.
+    # check_window_size():
+    #     Checks if the terminal window size is sufficient for the game.
+    # update_stats(game_won, game_lose):
+    #     Updates the user's statistics based on the game result.
+    # run():
+    #     Runs the main game loop.
+
     def __init__(self, stdscr, user, size=7):
         self.stdscr = stdscr
         self.user = user
@@ -35,6 +146,18 @@ class Board:
         self.user_stats = self.load_user_stats()
 
     def load_words(self):
+
+        # Loads words and their complexities from a file.
+        # 
+        # The method reads a file named 'words.txt' located in the './data/' directory.
+        # Each line in the file should contain a word and its complexity separated by a comma.
+        # The method returns a list of words and a dictionary mapping each word to its complexity.
+        # 
+        # Returns:
+        #     tuple: A tuple containing:
+        #         - list: A list of words.
+        #         - dict: A dictionary where keys are words and values are their complexities.
+
         words = []
         word_complexity = {}
         with open('./data/words.txt', 'r') as file:
@@ -45,6 +168,27 @@ class Board:
         return words, word_complexity
 
     def load_user_stats(self):
+
+        # Load the user's statistics from a file.
+        # 
+        # This method reads the user's statistics from a file located at './data/user.txt'.
+        # It checks if the file exists and reads its contents line by line. If a line matches
+        # the user's ID and contains the correct number of fields, it parses the statistics
+        # and returns them as a dictionary.
+        # 
+        # Returns:
+        #     dict: A dictionary containing the user's statistics with the following keys:
+        #     - 'games_played' (int): The number of games played by the user.
+        #     - 'games_won' (int): The number of games won by the user.
+        #     - 'words_revealed' (int): The number of words revealed by the user.
+        #     - 'longest_word_revealed' (str): The longest word revealed by the user.
+        #     - 'mines_stepped' (int): The number of mines stepped on by the user.
+        #     - 'highest_score_classic' (int): The highest score achieved by the user in classic mode.
+        #     - 'highest_score_timed' (int): The highest score achieved by the user in timed mode.
+        #     - 'average_steps_used' (float): The average number of steps used by the user.
+        #     - 'min_steps_used' (int): The minimum number of steps used by the user.
+        #     - 'max_steps_used' (int): The maximum number of steps used by the user.
+
         user_stats = {}
         if os.path.exists('./data/user.txt'):
             with open('./data/user.txt', 'r') as file:
@@ -67,6 +211,27 @@ class Board:
         return user_stats
 
     def save_user_stats(self):
+
+        # Saves the user's statistics to a file.
+        # 
+        # If the file './data/user.txt' exists, it reads the file and updates the
+        # user's statistics if the user ID matches. If the file does not exist, it
+        # creates a new file and writes the user's statistics.
+        # 
+        # The statistics include:
+        # - games_played: Number of games played by the user.
+        # - games_won: Number of games won by the user.
+        # - words_revealed: Number of words revealed by the user.
+        # - longest_word_revealed: The longest word revealed by the user.
+        # - mines_stepped: Number of mines stepped on by the user.
+        # - highest_score_classic: The highest score achieved by the user in classic mode.
+        # - highest_score_timed: The highest score achieved by the user in timed mode.
+        # - average_steps_used: The average number of steps used by the user.
+        # - min_steps_used: The minimum number of steps used by the user.
+        # - max_steps_used: The maximum number of steps used by the user.
+        # 
+        # The statistics are stored in a comma-separated format in the file.
+
         if os.path.exists('./data/user.txt'):
             with open('./data/user.txt', 'r') as file:
                 lines = file.readlines()
@@ -92,6 +257,35 @@ class Board:
                 file.write(f"{self.user.user_id},{self.user_stats['games_played']},{self.user_stats['games_won']},{self.user_stats['words_revealed']},{self.user_stats['longest_word_revealed']},{self.user_stats['mines_stepped']},{self.user_stats['highest_score_classic']},{self.user_stats['highest_score_timed']},{self.user_stats['average_steps_used']},{self.user_stats['min_steps_used']},{self.user_stats['max_steps_used']}\n")
 
     def fill_board(self):
+
+        # Fills the game board with words, mines, and hints.
+        # This method performs the following steps:
+        #
+        # 1. Resets the board and related variables.
+        # 2. Filters out words longer than the board size.
+        # 3. Randomly selects 3 words to place on the board.
+        # 4. Initializes the reveal status for each selected word.
+        # 5. Randomly places the selected words on the board either horizontally or vertically.
+        # 6. Randomly fills some of the remaining empty cells with common letters.
+        # 7. Generates a list of all possible positions for placing mines.
+        # 8. Randomly places a specified number of mines on the board.
+        # 9. Calculates mine hints for each cell.
+        # 10. Calculates letter hints for each empty cell.
+        #
+        # Attributes:
+        #     board (list): 2D list representing the game board.
+        #     covered (list): 2D list indicating whether each cell is covered.
+        #     mine_hints (list): 2D list containing mine hints for each cell.
+        #     letter_hints (list): 2D list containing letter hints for each cell.
+        #     flagged (list): 2D list indicating whether each cell is flagged.
+        #     selected_words (list): List of words selected to be placed on the board.
+        #     revealed_words (set): Set of words that have been revealed.
+        #     word_reveal_status (dict): Dictionary tracking the reveal status of each word.
+        #     move_count (int): Counter for the number of moves made.
+        #     last_revealed (tuple): Coordinates of the last revealed cell.
+        #     current_word (str): The current word being revealed.
+        #     score (int): The player's score.
+
         # Reset the board and related variables
         self.board = [[' ' for _ in range(self.size)] for _ in range(self.size)]
         self.covered = [[True for _ in range(self.size)] for _ in range(self.size)]
@@ -178,6 +372,22 @@ class Board:
                 self.letter_hints[i][j] = self.calculate_letter_hint(i, j)
 
     def calculate_mine_hint(self, row, col):
+
+        # Calculate the hint for the number of mines around a given cell in the board.
+        # This function checks all 8 possible directions around the given cell (row, col)
+        # to determine the presence of mines. It then generates a hint based on the 
+        # configuration of the mines around the cell. The hint is represented using 
+        # Braille patterns to indicate the positions of the mines.
+        #
+        # Args:
+        #     row (int): The row index of the cell.
+        #     col (int): The column index of the cell.
+        #
+        # Returns:
+        #     list: A list of two characters representing the hint for the cell. Each 
+        #           character is a Braille pattern indicating the presence of mines 
+        #           around the cell.
+
         hint = [' ', ' ']
 
         def has_mine_in_direction(dir_row, dir_col):
@@ -333,6 +543,21 @@ class Board:
         return hint
 
     def calculate_letter_hint(self, row, col):
+
+        # Calculate the hint for a given cell in the puzzle game.
+        # 
+        # This method counts how many times the character in the specified cell
+        # (row, col) appears in any of the selected words within the surrounding
+        # 3x3 grid. The count is returned as a string. If the count is zero, a 
+        # space character is returned instead.
+        # 
+        # Args:
+        #     row (int): The row index of the cell.
+        #     col (int): The column index of the cell.
+        # 
+        # Returns:
+        #     str: The count of occurrences as a string, or a space if the count is zero.
+
         count = 0
         for i in range(max(0, row - 1), min(self.size, row + 2)):
             for j in range(max(0, col - 1), min(self.size, col + 2)):
@@ -342,6 +567,29 @@ class Board:
         return str(count) if count > 0 else ' '  # Return the count as a string, or a space if count is 0
 
     def display_user_info(self):
+
+        # Displays the user's information in a separate window on the screen.
+        # 
+        # This method creates a new window using the curses library and displays
+        # the player's ID, highest score in classic mode, number of games won, 
+        # and win rate. The window is positioned at the top right corner of the 
+        # screen.
+        # 
+        # The displayed information includes:
+        # - Player ID
+        # - Highest Score in Classic Mode
+        # - Number of Games Won
+        # - Win Rate (calculated as the percentage of games won out of games played)
+        # 
+        # The window is bordered and the text is formatted with some bold attributes.
+        # 
+        # Note:
+        #     This method assumes that `self.stdscr` is a valid curses window object,
+        #     `self.user` has an attribute `user_id`, and `self.user_stats` is a 
+        #     dictionary containing the keys 'highest_score_classic', 'games_won', 
+        #     and 'games_played'.
+        # 
+
         h, w = self.stdscr.getmaxyx()
         user_info_win = curses.newwin(7, 40, 1, w - 41)
         user_info_win.border('|', '|', '-', '-', '+', '+', '+', '+')
@@ -358,6 +606,38 @@ class Board:
         user_info_win.refresh()
 
     def draw_board(self):
+
+        # Draws the game board and various game-related information on the screen.
+        # This method clears the screen and redraws the game board, hints, move counter,
+        # score, mine stepped counter, and any game messages (win/lose). It uses the 
+        # curses library to handle screen drawing.
+        #
+        # The board is drawn with cells that can be covered, flagged, questioned, or revealed.
+        # The hints, move counter, score, and mine stepped counter are displayed on the left-hand side.
+        # If the game is won or lost, appropriate messages are displayed.
+        #
+        # Attributes:
+        #     self.stdscr (curses.window): The window object where the game is drawn.
+        #     self.size (int): The size of the game board.
+        #     self.selected_words (list): List of words to be found in the game.
+        #     self.revealed_words (list): List of words that have been found.
+        #     self.mine_stepped_counter (int): Counter for the number of mines stepped on.
+        #     self.move_count (int): Counter for the number of moves made.
+        #     self.score (int): The current score of the player.
+        #     self.covered (list): 2D list indicating whether each cell is covered.
+        #     self.flagged (list): 2D list indicating whether each cell is flagged.
+        #     self.questioned (list): 2D list indicating whether each cell is questioned.
+        #     self.mine_hints (list): 2D list of mine hints for each cell.
+        #     self.letter_hints (list): 2D list of letter hints for each cell.
+        #     self.board (list): 2D list representing the game board.
+        #     self.exit_prompt (bool): Flag indicating whether the exit prompt is shown.
+        #     self.game_won (bool): Flag indicating whether the game is won.
+        #     self.game_lose (bool): Flag indicating whether the game is lost.
+        #     self.mine_lose (bool): Flag indicating whether the game is lost due to stepping on mines.
+        #
+        # Returns:
+        #     None
+
         self.stdscr.clear()
         h, w = self.stdscr.getmaxyx()
         board_width = self.size * 4 + 1
@@ -455,12 +735,38 @@ class Board:
         self.stdscr.refresh()
 
     def calculate_base_score(self, word):
+
+        # Calculate the base score for a given word.
+        # 
+        # The base score is determined by the length of the word and its complexity.
+        # The complexity of the word is retrieved from the `word_complexity` dictionary.
+        # If the word is not found in the dictionary, a default complexity of 1 is used.
+        # 
+        # Args:
+        #     word (str): The word for which to calculate the base score.
+        # 
+        # Returns:
+        #     int: The calculated base score for the word.
+
         word_length = len(word)
         word_complexity = self.word_complexity.get(word, 1)
         base_score = word_length * word_complexity
         return base_score
 
     def calculate_clean_reveal_bonus(self, clean_reveal, word):
+
+        # Calculate the bonus score for a clean reveal of a word.
+        # 
+        # A clean reveal is when the word is revealed without any mistakes.
+        # The bonus score is calculated based on the length of the word and its complexity.
+        # 
+        # Args:
+        #     clean_reveal (bool): A flag indicating if the word was revealed cleanly.
+        #     word (str): The word that was revealed.
+        # 
+        # Returns:
+        #     int: The bonus score for the clean reveal.
+
         bonus_score = 0
         if clean_reveal:
             word_length = len(word)
@@ -469,16 +775,42 @@ class Board:
         return bonus_score
 
     def calculate_total_score(self, word, clean_reveal):
+
+        # Calculate the total score for a given word based on its length, complexity, and whether it was revealed cleanly.
+        # 
+        # Args:
+        #     word (str): The word for which the score is being calculated.
+        #     clean_reveal (bool): A flag indicating if the word was revealed cleanly.
+        # 
+        # Returns:
+        #     int: The total score for the given word.
+
         word_length = len(word)
         word_complexity = self.word_complexity.get(word, 1)
-        base_score = word_length * word_complexity * 100  # Increase base score
+        base_score = word_length * word_complexity * 100  # Base score for each word
         clean_bonus = 0
         if clean_reveal:
-            clean_bonus = (word_length * word_complexity * 50)  # Increase clean reveal bonus
+            clean_bonus = (word_length * word_complexity * 50)  # Clean reveal bonus
         total_score = base_score + clean_bonus
         return total_score
 
     def check_revealed_words(self):
+
+        # Checks if any of the selected words have been completely revealed on the board.
+        # 
+        # For each word in the selected words list, the method iterates through the board to find the starting 
+        # letter of the word. If the starting letter is found, it checks if the word is revealed either 
+        # horizontally ('H') or vertically ('V'). If the word is revealed and not already in the revealed words 
+        # set, it performs the following actions:
+        # 
+        # - Verifies if the word is cleanly revealed (all cells of the word are in the word reveal status).
+        # - Adds the word to the revealed words set.
+        # - Resets the word reveal status for the word.
+        # - Resets the current word.
+        # - Increases the score based on the total score calculation for the word and whether it was cleanly revealed.
+        # - Adjusts the random click cap.
+        # - Awards bonus points.
+
         for word in self.selected_words:
             revealed = True
             for i in range(self.size):
@@ -495,6 +827,15 @@ class Board:
                                 self.award_bonus_points()
 
     def check_if_mine_stepped_lost(self):
+
+        # Checks if the player has stepped on a mine three times and updates the game state accordingly.
+        # 
+        # If the player has stepped on a mine three times, the game is marked as lost, 
+        # the mine lose condition is set to True, and the game won condition is set to False.
+        # 
+        # Returns:
+        #     bool: True if the player has stepped on a mine three times, otherwise False.
+
         if self.mine_stepped_counter == 3:
             self.game_lose = True
             self.mine_lose = True
@@ -502,6 +843,19 @@ class Board:
             return True
 
     def adjust_random_click_cap(self):
+
+        # Adjusts the cap for random clicks based on the number of words left to be revealed.
+        # 
+        # This method updates the `random_click_cap` and potentially the `random_click_counter`
+        # based on the number of words left to be revealed in the game. The cap and counter
+        # are adjusted in three stages:
+        # 
+        # - Stage 1: When there are 3 words left, the random click cap is set to 10.
+        # - Stage 2: When there are 2 words left, the random click cap is reduced to 9, and the
+        #   random click counter is decreased by up to 5, but not below 0.
+        # - Stage 3: When there is 1 word left, the random click cap is reduced to 7, and the
+        #   random click counter is decreased by up to 3, but not below 0.
+
         words_left = len(self.selected_words) - len(self.revealed_words)
         if words_left == 3:
             self.random_click_cap = 10  # Stage 1 cap for random clicks
@@ -513,6 +867,19 @@ class Board:
             self.random_click_counter = max(0, self.random_click_counter - 3)
 
     def award_bonus_points(self):
+
+        # Awards bonus points based on the number of words left to be revealed and the number of random clicks made.
+        # 
+        # The bonus points are awarded as follows:
+        # - If 3 words are left and the random click counter is within the cap, 800 points multiplied by the remaining allowed clicks are added to the score.
+        # - If 2 words are left and the random click counter is within the cap, 1200 points multiplied by the remaining allowed clicks are added to the score.
+        # - If 1 word is left and the random click counter is within the cap, 1700 points multiplied by the remaining allowed clicks are added to the score.
+        # 
+        # The remaining allowed clicks are calculated as the difference between the random click cap and the current random click counter, with a minimum multiplier of 1.
+        # 
+        # Returns:
+        #     None
+
         words_left = len(self.selected_words) - len(self.revealed_words)
         if words_left == 3 and self.random_click_counter <= self.random_click_cap:
             self.score += 800 * max(1, (self.random_click_cap - self.random_click_counter))  # Stage 1 bonus points
@@ -522,6 +889,20 @@ class Board:
             self.score += 1700 * max(1, (self.random_click_cap - self.random_click_counter)) # Stage 3 bonus points
 
     def penalty_multiplier(self, random_click_counter, cap_value):
+
+        # Calculate the penalty multiplier based on the number of random clicks.
+        # The penalty multiplier is determined using an exponential function and a linear function
+        # depending on the value of random_click_counter relative to cap_value.
+        #
+        # Explanation of this formula can be found at https://github.com/NaughtyChas/Wordweeper/pull/17#issuecomment-2468165644
+        #
+        # Parameters:
+        # - random_click_counter (int): The number of random clicks made by the user.
+        # - cap_value (int): The threshold value for determining the penalty.
+        #
+        # Returns:
+        # - float: The calculated penalty multiplier.
+
         k = 0.01
         
         if random_click_counter <= (cap_value - 2):
@@ -533,6 +914,21 @@ class Board:
 
 
     def get_word_cells(self, word):
+
+        # Find the cells on the board that contain the given word.
+        # 
+        # This method searches the board for the starting letter of the word and 
+        # checks if the word can be revealed horizontally ('H') or vertically ('V') 
+        # from that position. If the word is found, it collects the coordinates of 
+        # the cells that contain the word.
+        # 
+        # Args:
+        #     word (str): The word to search for on the board.
+        # 
+        # Returns:
+        #     list of tuple: A list of tuples where each tuple represents the 
+        #            coordinates (i, j) of a cell that contains part of the word.
+
         cells = []
         for i in range(self.size):
             for j in range(self.size):
@@ -544,6 +940,18 @@ class Board:
         return cells
 
     def check_word_revealed(self, row, col, word, direction):
+
+        # Check if a word is fully revealed on the board in the specified direction.
+        # 
+        # Args:
+        #     row (int): The starting row index of the word.
+        #     col (int): The starting column index of the word.
+        #     word (str): The word to check.
+        #     direction (str): The direction of the word ('H' for horizontal, 'V' for vertical).
+        # 
+        # Returns:
+        #     bool: True if the word is fully revealed, False otherwise.
+
         if direction == 'H':
             if col + len(word) > self.size:
                 return False
@@ -559,6 +967,14 @@ class Board:
         return True
 
     def check_all_words_revealed(self):
+
+        # Checks if all selected words have been revealed and updates the game state accordingly.
+        # If all revealed but the score is negative, game_lose is set to True and game_won is set to False.
+        # If all words are revealed with a positive score, game_won is set to True and game_lose is set to False.
+        # 
+        # Returns:
+        #     bool: True if all selected words are revealed, otherwise False.
+
         all_revealed = all(word in self.revealed_words for word in self.selected_words)
         if all_revealed and self.score < 0:
             self.game_won = False
@@ -571,6 +987,17 @@ class Board:
         return False
 
     def check_window_size(self):
+
+        # Checks if the terminal window size meets the minimum requirements.
+        # This method retrieves the current terminal window size and compares it
+        # against the minimum required dimensions (25 rows by 142 columns). If the
+        # terminal window is too small, it displays a message prompting the user to
+        # increase the window size and waits for user input before returning.
+        #
+        # Returns:
+        #     bool: True if the terminal window size meets the minimum requirements,
+        #           False otherwise.
+
         h, w = self.stdscr.getmaxyx()
         min_height = 25
         min_width = 142
@@ -588,6 +1015,17 @@ class Board:
         return True
 
     def update_stats(self, game_won, game_lose):
+
+        # Updates the user's game statistics.
+        # 
+        # This method increments the number of games played, updates the number of games won if applicable,
+        # and checks if the current score is higher than the recorded highest score for classic mode. 
+        # If so, it updates the highest score. Finally, it saves the updated statistics.
+        # 
+        # Args:
+        #     game_won (bool): Indicates if the game was won.
+        #     game_lose (bool): Indicates if the game was lost.
+
         self.user_stats['games_played'] += 1
         if game_won and not game_lose:
             self.user_stats['games_won'] += 1
@@ -596,6 +1034,22 @@ class Board:
         self.save_user_stats()
 
     def run(self):
+
+        # Main game loop for the classic easy mode of the puzzle game.
+        # This method handles the game logic, user input, and game state updates. It continuously checks the window size,
+        # processes user inputs (keyboard and mouse), updates the game board, and manages the game state (win/lose conditions).
+        # The loop continues until the user decides to exit the game by pressing the ESC key or 'q' key after winning.
+        #
+        # Key functionalities:
+        # - Checks window size and redraws the board if necessary.
+        # - Handles user inputs including ESC key for exit, 'n' key for new game, and mouse clicks for revealing cells.
+        # - Updates game state based on user actions, including revealing cells, flagging cells, and checking for win/lose conditions.
+        # - Calculates and applies penalties for revealing mines and random clicks.
+        # - Updates and displays user information and game statistics.
+        #
+        # Returns:
+        #     None
+
         while True:
             if not self.check_window_size():
                 continue
@@ -649,6 +1103,13 @@ class Board:
                         elif self.covered[cell_y][cell_x]:
                             self.covered[cell_y][cell_x] = False
                             self.move_count += 1  # Increment move counter
+
+                            # Instead of write mine penalty into a function, I've wrote it here.
+                            # This is because the penalty is only applied when a mine is revealed.
+                            # The penalty is calculated based on the number of revealed cells and the total number of cells.
+                            # You can find more explanation about the punishment algorithm at:
+                            # https://github.com/NaughtyChas/Wordweeper/pull/17#issuecomment-2467928859
+                            
                             if self.board[cell_y][cell_x] == '✱':
                                 self.mine_stepped_counter += 1
                                 revealed_cells = sum(not self.covered[i][j] for i in range(self.size) for j in range(self.size))
@@ -671,6 +1132,10 @@ class Board:
                                             self.current_word = word
                                         if self.current_word == word:
                                             self.word_reveal_status[word].append((cell_y, cell_x))
+
+                                # Check if the revealed cell is part of a selected word,
+                                # and apply the appropriate base penalty for random clicks.
+                                
                                 if (not is_part_of_word) or (is_part_of_word and self.random_click_counter == 0):
                                     self.random_click_counter += 1
                                     words_left = len(self.selected_words) - len(self.revealed_words)
@@ -693,6 +1158,10 @@ class Board:
                                 self.game_won = True
                                 self.update_stats(self.game_won, self.game_lose)
                                 self.draw_board()
+
+                # Check if the player has stepped on a mine three times,
+                # If so, the game is lost and the game will end.
+
                 if self.check_if_mine_stepped_lost() and not self.game_won:
                     self.draw_board()
                     self.stdscr.refresh()
