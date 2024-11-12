@@ -1,3 +1,28 @@
+# This module provides a text-based menu interface for a puzzle game using the curses library.
+# It includes functionality for user registration, game difficulty selection, and viewing user statistics.
+# Classes:
+#     Menu: Represents the main menu interface for the puzzle game.
+# Functions:
+#     __init__(self, stdscr): Initializes the menu with the given stdscr object.
+#     load_users(self): Loads user data from a file and returns a list of User objects.
+#     check_window_size(self): Checks if the terminal window size meets the minimum requirements.
+#     print_menu(self, menu): Prints the given menu to the screen.
+#     handle_enter(self): Handles the Enter key being pressed while navigating the menu.
+#     start_game(self): Handles game starting logic.
+#     start_game_with_difficulty(self, difficulty): Starts a new game with the given difficulty.
+#     register(self): Opens a registration prompt to the user.
+#     view_statistics(self): Shows the statistics of all users and allows the user to select a user to view their statistics.
+#     run(self): Runs the main loop of the menu interface.
+# Attributes:
+#     stdscr: The curses window object.
+#     current_row: The current row of the menu.
+#     current_menu: The current menu being displayed.
+#     current_user: The current user logged in.
+#     users: A list of User objects.
+#     menus: A dictionary of menu items, keyed by menu name.
+#     descriptions: A dictionary of descriptions for each menu item.
+#     ascii_art: A list of strings that form the ASCII art for the menu.
+
 import curses
 import os
 import re
@@ -11,6 +36,22 @@ from util.user_statistics import UserStatistics
 
 class Menu:
     def __init__(self, stdscr):
+        
+        # Initialize the menu with the given stdscr object.
+        #
+        # Args:
+        #     stdscr: A curses window object
+        #
+        # Attributes:
+        #     stdscr: The curses window object
+        #     current_row: The current row of the menu
+        #     current_menu: The current menu being displayed
+        #     current_user: The current user logged in
+        #     users: A list of User objects
+        #     menus: A dictionary of menu items, keyed by menu name
+        #     descriptions: A dictionary of descriptions for each menu item
+        #     ascii_art: A list of strings that form the ASCII art for the menu
+
         self.stdscr = stdscr
         self.current_row = 0
         self.current_menu = "main"
@@ -47,6 +88,17 @@ class Menu:
         ]
 
     def load_users(self):
+
+    # Loads user data from a file and returns a list of User objects.
+    #
+    # This function checks if the 'user.txt' file exists in the './data/' directory.
+    # If the file exists, it reads user data from the file, where each line represents
+    # a user and contains 11 comma-separated fields. It creates a User object for each
+    # line with the correct number of fields and appends it to a list.
+    # 
+    # Returns:
+    #     list: A list of User objects created from the data in 'user.txt'.
+
         users = []
         if os.path.exists('./data/user.txt'):
             with open('./data/user.txt', 'r') as file:
@@ -58,6 +110,17 @@ class Menu:
         return users
 
     def check_window_size(self):
+
+    # Checks if the terminal window size meets the minimum requirements.
+    #
+    # This function retrieves the current dimensions of the terminal window and
+    # compares them against a predefined minimum height and width. If the window
+    # is too small, a message is displayed prompting the user to increase the
+    # window size. The function waits for user input before returning.
+    #
+    # Returns:
+    #     bool: True if the window size is adequate, False otherwise.
+
         h, w = self.stdscr.getmaxyx()
         min_height = 25
         min_width = 142
@@ -75,6 +138,12 @@ class Menu:
         return True
 
     def print_menu(self, menu):
+
+        # Prints the given menu to the screen.
+        #
+        # Args:
+        #     menu (list): A list of strings, where each string is a menu item.
+
         self.stdscr.clear()
         h, w = self.stdscr.getmaxyx()
         menu_start_y = (h - len(self.ascii_art) - len([item for item in menu if item != ""])) // 2 + len(self.ascii_art)
@@ -101,6 +170,11 @@ class Menu:
         self.stdscr.refresh()
 
     def handle_enter(self):
+
+        # Handles the Enter key being pressed while navigating the menu.
+        #
+        # Checks the currently selected menu item and performs the appropriate action.
+
         menu = self.menus[self.current_menu]
         if self.current_menu == "main":
             if menu[self.current_row] == "Start Game":
@@ -144,6 +218,11 @@ class Menu:
                 self.current_row = 0
 
     def start_game(self):
+
+        # Handle game starting logic
+        #
+        # If the user is not logged in, shows the user selection menu. If the user is logged in, shows the classic mode selection menu.
+
         if self.current_user is None:
             if not self.users:
                 self.menus["start_game"] = ["Click here or press 'Enter' to register!"]
@@ -155,6 +234,12 @@ class Menu:
         self.current_row = 0
 
     def start_game_with_difficulty(self, difficulty):
+
+        # Starts a new game with the given difficulty.
+        # 
+        # param difficulty: The difficulty of the game. Can be "Easy", "Hard", or "Expert".
+        # type difficulty: str
+
         if difficulty == "Easy":
             board = EasyBoard(self.stdscr, self.current_user, size=7)
         elif difficulty == "Hard":
@@ -165,6 +250,14 @@ class Menu:
         board.run()
 
     def register(self):
+
+        # Opens a registration prompt to the user. The user can enter a username,
+        # and the function will validate the username and register the user if
+        # the username is valid. The function will continue to prompt the user
+        # until a valid username is entered.
+        # 
+        # return: None
+
         while True:
             self.stdscr.clear()
             self.stdscr.addstr(13, 10, "Enter user ID (Press ESC to cancel): ")
@@ -217,12 +310,36 @@ class Menu:
         self.current_row = 0
 
     def view_statistics(self):
+
+        # Shows the statistics of all users and allows the user to select a user to view their statistics.
+        # 
+        # :return: None
+
         stats = UserStatistics(self.stdscr)
         stats.display()
         self.current_menu = "main"
         self.current_row = 0
 
     def run(self):
+
+        # Runs the main loop of the menu interface.
+        # This method initializes the curses settings, handles user input, and updates the menu display accordingly.
+        # It supports navigation through the menu using arrow keys, mouse clicks, and the Enter key to select options.
+        # The ESC key is used to navigate back to the main menu or exit the application.
+        # The method performs the following actions:
+        # - Disables the cursor.
+        # - Initializes color pairs for the menu display.
+        # - Sets up mouse event handling.
+        # - Continuously checks for user input and updates the menu state.
+        # Key bindings:
+        # - Up arrow: Move the selection up.
+        # - Down arrow: Move the selection down.
+        # - Enter: Select the current menu item.
+        # - ESC: Navigate back or exit the application.
+        # - Mouse click: Select the menu item under the cursor.
+        # Returns:
+        #     None
+
         curses.curs_set(0)
         curses.start_color()
         curses.init_pair(1, curses.COLOR_BLACK, curses.COLOR_WHITE)
