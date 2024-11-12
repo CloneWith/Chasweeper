@@ -216,8 +216,7 @@ class UserStatistics:
             self.stdscr.addstr(start_y, (w - len(f"Statistics for {self.current_user.user_id}")) // 2, f"Statistics for {self.current_user.user_id}", curses.A_BOLD | curses.A_UNDERLINE)
             self.stdscr.addstr(start_y + 2, (w - len(f"Games Played: {stats['games_played']}")) // 2, f"Games Played: {stats['games_played']}")
             self.stdscr.addstr(start_y + 3, (w - len(f"Games Won: {stats['games_won']}")) // 2, f"Games Won: {stats['games_won']}")
-            self.stdscr.addstr(start_y + 4, (w - len(f"Highest Score (Classic Mode): {stats['highest_score_classic']}")) // 2, f"Highest Score (Classic Mode): {stats['highest_score_classic']}")
-            self.stdscr.addstr(start_y + 5, (w - len(f"Highest Score (Timed Mode): {stats['highest_score_timed']}")) // 2, f"Highest Score (Timed Mode): {stats['highest_score_timed']}")
+            self.stdscr.addstr(start_y + 4, (w - len(f"Highest Score (Classic Mode): {stats['highest_score_classic']}")) // 2, f"Highest Score: {stats['highest_score_classic']}")
             self.stdscr.addstr(start_y + 10, (w - len("Press ESC to return to user selection.")) // 2, "Press ESC to return to user selection.", curses.A_DIM)
 
             # Refresh the window to show the changes
