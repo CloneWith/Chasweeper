@@ -305,6 +305,16 @@ class Board:
             if bottom_right:
                 hint[1] = '⢀'
 
+        # If corner and top / bottom
+        if top_left and bottom and hint[0] != '⡁':
+            hint[0] = '⡁'
+        if top_right and bottom and hint[1] != '⢈':
+            hint[1] = '⢈'
+        if bottom_left and top and hint[0] != '⡁':
+            hint[0] = '⡁'
+        if bottom_right and top and hint[1] != '⢈':
+            hint[1] = '⢈'
+
         # Updated `if top:` condition
         if top:
             if not (hint[0] in ['⠁', '⡁'] or hint[1] in ['⢈', '⠈']):
