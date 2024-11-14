@@ -213,7 +213,7 @@ Demo video: https://www.youtube.com/watch?v=ejUL5SK2R08&ab_channel=BBI
     
 - **Modular Project Structure**
     
-    Instead of storing all code in one [main.py](http://main.py) file, I’ve seperated different types of code into seperate files. For instance [diffcalc.py](http://diffcalc.py) only handle word complexity calculation logic, and [menu.py](http://menu.py) is used to display menu, not including main game logic.
+    Instead of storing all code in one `main.py` file, I’ve seperated different types of code into seperate files. For instance `diffcalc.py` only handle word complexity calculation logic, and menu.py is used to display menu, not including main game logic.
     
     This brings us easier management and capability to update the game.
     
