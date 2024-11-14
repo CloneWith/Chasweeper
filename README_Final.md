@@ -22,7 +22,7 @@ Wong Wing Man - Video producing / editing
 
 Meng Xiangkun - Gamerule Design, Coding, Testing, Readme 
 
-Chan Ka Hei - 
+Chan Ka Hei - Testing
 
 Wei Yuetong - Readme, Mine Hint Design
 
