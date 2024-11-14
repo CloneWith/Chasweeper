@@ -1,3 +1,11 @@
+# A module for the classic hard mode of The Puzzle Game.
+# This module contains the Board class, which represents the game board and handles the game logic, 
+# user input, and game state updates for the classic hard mode of The Puzzle Game.
+
+
+# Notice: This version of code has no structural differences compared to classicEasy.py, only some values are changed to balance the gameplay.
+#         Hence so no docstring is provided in this file.
+
 import curses
 import math
 import random

@@ -3,12 +3,58 @@ import os
 from util.user import User
 
 class UserStatistics:
+    # A class to manage and display user statistics in a terminal-based interface using curses.
+    # Attributes:
+    #     stdscr (curses.window): The main window object for curses.
+    #     users (list): A list of User objects loaded from a file.
+    #     current_user (User): The currently selected user.
+    # Methods:
+    #     __init__(stdscr):
+    #         Initializes the UserStatistics object with the given curses window.
+    #     load_users():
+    #         Loads user data from a file and returns a list of User objects.
+    #     check_window_size():
+    #         Checks if the terminal window size meets the minimum requirements.
+    #         Displays a message and waits for user input if the window is too small.
+    #     display():
+    #         Main loop to display user statistics. Continuously checks window size and
+    #         allows user to select a user and view their statistics.
+    #     select_user():
+    #         Allows the user to select a user from the list of loaded users.
+    #         Returns True if a user is selected, False if ESC is pressed.
+    #     display_user_stats():
+    #         Displays the statistics of the currently selected user.
+    #         Waits for user input to return to user selection.
+
     def __init__(self, stdscr):
+
+        # Initializes the UserStatistics class.
+        # 
+        # Args:
+        #     stdscr: The standard screen object for the curses application.
+        # 
+        # Attributes:
+        #     stdscr: The standard screen object for the curses application.
+        #     users (dict): A dictionary of users loaded from storage.
+        #     current_user: The currently active user, initially set to None.
+
         self.stdscr = stdscr
         self.users = self.load_users()
         self.current_user = None
 
     def load_users(self):
+
+        # Loads user data from a file and returns a list of User objects.
+        # 
+        # The method reads from './data/user.txt' and expects each line in the file to contain
+        # 11 comma-separated values corresponding to the attributes of a User object.
+        # 
+        # Returns:
+        #     list: A list of User objects loaded from the file.
+        # 
+        # Raises:
+        #     ValueError: If any of the fields cannot be converted to the appropriate type.
+
         users = []
         if os.path.exists('./data/user.txt'):
             with open('./data/user.txt', 'r') as file:
@@ -20,6 +66,19 @@ class UserStatistics:
         return users
 
     def check_window_size(self):
+
+        # Checks if the current terminal window size meets the minimum required dimensions.
+        # The minimum required dimensions are:
+        # - Height: 25 rows
+        # - Width: 142 columns
+        #
+        # If the terminal window is too small, a message is displayed prompting the user to 
+        # increase the window size. The function waits for the user to press a key before 
+        # returning.
+        #
+        # Returns:
+        #     bool: True if the terminal window size is sufficient, False otherwise.
+
         h, w = self.stdscr.getmaxyx()
         min_height = 25
         min_width = 142
@@ -37,6 +96,17 @@ class UserStatistics:
         return True
 
     def display(self):
+
+        # Display user statistics in a loop until the user exits.
+        # 
+        # This method continuously checks the window size and displays user statistics.
+        # If the window size is not appropriate, it will keep checking until it is.
+        # If no current user is selected, it will prompt the user to select one.
+        # The loop will exit if the user presses ESC during the user selection process.
+        # 
+        # Returns:
+        #     None
+
         while True:
             if not self.check_window_size():
                 continue
@@ -46,6 +116,16 @@ class UserStatistics:
             self.display_user_stats()
 
     def select_user(self):
+
+        # Displays a user selection menu in a curses window and allows the user to select a user to view statistics.
+        # The function handles the following:
+        # - Displays a message if no users are registered.
+        # - Allows navigation through the list of users using the arrow keys.
+        # - Allows selection of a user using the Enter key or mouse click.
+        # - Returns to the main menu if the ESC key is pressed.
+        # Returns:
+        #     bool: True if a user is selected, False if the ESC key is pressed to return to the main menu.
+
         current_row = 0
         while True:
             if not self.check_window_size():
@@ -102,6 +182,26 @@ class UserStatistics:
                                 return True
 
     def display_user_stats(self):
+
+        # Display the current user's statistics in a curses window.
+        # This method continuously checks the window size and updates the display
+        # to show the user's statistics centered on the screen. The statistics
+        # include the number of games played, games won, highest score in classic
+        # mode, and highest score in timed mode. The user can press the ESC key
+        # to return to the user selection screen.
+        #
+        # The statistics are displayed as follows:
+        # - Statistics for <user_id>
+        # - Games Played: <games_played>
+        # - Games Won: <games_won>
+        # - Highest Score (Classic Mode): <highest_score_classic>
+        # - Highest Score (Timed Mode): <highest_score_timed>
+        # - Press ESC to return to user selection.
+        # The method handles window resizing and ensures the text is always centered.
+        #
+        # Returns:
+        #     None
+
         while True:
             if not self.check_window_size():
                 continue
@@ -116,8 +216,7 @@ class UserStatistics:
             self.stdscr.addstr(start_y, (w - len(f"Statistics for {self.current_user.user_id}")) // 2, f"Statistics for {self.current_user.user_id}", curses.A_BOLD | curses.A_UNDERLINE)
             self.stdscr.addstr(start_y + 2, (w - len(f"Games Played: {stats['games_played']}")) // 2, f"Games Played: {stats['games_played']}")
             self.stdscr.addstr(start_y + 3, (w - len(f"Games Won: {stats['games_won']}")) // 2, f"Games Won: {stats['games_won']}")
-            self.stdscr.addstr(start_y + 4, (w - len(f"Highest Score (Classic Mode): {stats['highest_score_classic']}")) // 2, f"Highest Score (Classic Mode): {stats['highest_score_classic']}")
-            self.stdscr.addstr(start_y + 5, (w - len(f"Highest Score (Timed Mode): {stats['highest_score_timed']}")) // 2, f"Highest Score (Timed Mode): {stats['highest_score_timed']}")
+            self.stdscr.addstr(start_y + 4, (w - len(f"Highest Score (Classic Mode): {stats['highest_score_classic']}")) // 2 + 6, f"Highest Score: {stats['highest_score_classic']}")
             self.stdscr.addstr(start_y + 10, (w - len("Press ESC to return to user selection.")) // 2, "Press ESC to return to user selection.", curses.A_DIM)
 
             # Refresh the window to show the changes
