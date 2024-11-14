@@ -16,15 +16,15 @@ Wei Yuetong
 
 ## 2. Contributions
 
-Chen Jiahe
+Chen Jiahe - Footage capturing
 
 Wong Wing Man - Video producing / editing
 
-Meng Xiangkun - Coding, Testing, Readme
+Meng Xiangkun - Gamerule Design, Coding, Testing, Readme 
 
-Chan Ka Hei
+Chan Ka Hei - 
 
-Wei Yuetong
+Wei Yuetong - Readme, Mine Hint Design
 
 ---
 
